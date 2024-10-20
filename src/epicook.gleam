@@ -1,3 +1,4 @@
+import application/context.{Context}
 import common/errors.{type InitError, ServerStartError, log_error}
 import dot_env
 import env
@@ -6,6 +7,7 @@ import gleam/int
 import gleam/io
 import gleam/result
 import gleam/string
+import infrastructure/postgres/db
 import mist
 import presentation/rest/router
 import wisp/wisp_mist
@@ -30,7 +32,11 @@ fn start_server() -> Result(Nil, InitError) {
 
   io.println("Starting Epicook API on port: " <> int.to_string(env.port))
 
-  wisp_mist.handler(router.handle_request, "SECRET_KEY_BASE")
+  let db = db.connect(env.db_config)
+  let context = Context(db)
+  let handler = router.handle_request(_, context)
+
+  wisp_mist.handler(handler, "SECRET_KEY_BASE")
   |> mist.new
   |> mist.port(env.port)
   |> mist.start_http
