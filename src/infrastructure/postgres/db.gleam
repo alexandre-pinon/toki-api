@@ -1,6 +1,9 @@
+import common/errors.{log_error}
 import env.{type DbConfig}
+import gleam/dynamic
 import gleam/option
 import gleam/pgo
+import gleam/result
 
 pub fn connect(db_config: DbConfig) -> pgo.Connection {
   pgo.connect(
@@ -18,4 +21,16 @@ pub fn connect(db_config: DbConfig) -> pgo.Connection {
 
 pub fn disconnect(db: pgo.Connection) -> Nil {
   pgo.disconnect(db)
+}
+
+pub fn execute(
+  query sql: String,
+  on pool: pgo.Connection,
+  with arguments: List(pgo.Value),
+  expecting decoder: dynamic.Decoder(t),
+) -> Result(List(t), pgo.QueryError) {
+  sql
+  |> pgo.execute(pool, arguments, decoder)
+  |> result.map(fn(returned) { returned.rows })
+  |> result.map_error(log_error)
 }

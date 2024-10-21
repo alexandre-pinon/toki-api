@@ -1,5 +1,5 @@
 import gleam/pgo
 
 pub type Context {
-  Context(db: pgo.Connection)
+  Context(pool: pgo.Connection)
 }

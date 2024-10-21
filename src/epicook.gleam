@@ -33,8 +33,8 @@ fn start_server() -> Result(Nil, InitError) {
   io.println("Starting Epicook API on port: " <> int.to_string(env.port))
 
   let db = db.connect(env.db_config)
-  let context = Context(db)
-  let handler = router.handle_request(_, context)
+  let ctx = Context(db)
+  let handler = router.handle_request(_, ctx)
 
   wisp_mist.handler(handler, "SECRET_KEY_BASE")
   |> mist.new
