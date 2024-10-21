@@ -1,7 +1,7 @@
 import common/errors.{log_error}
 import env.{type DbConfig}
 import gleam/dynamic
-import gleam/option
+import gleam/option.{Some}
 import gleam/pgo
 import gleam/result
 
@@ -13,7 +13,7 @@ pub fn connect(db_config: DbConfig) -> pgo.Connection {
       host: db_config.host,
       database: db_config.database,
       user: db_config.user,
-      password: option.Some(db_config.password),
+      password: Some(db_config.password),
       pool_size: db_config.pool_size,
     ),
   )
