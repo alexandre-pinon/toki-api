@@ -46,6 +46,7 @@ packages = [
 ]
 
 [requirements]
+birl = { version = ">= 1.7.1 and < 2.0.0" }
 dot_env = { version = ">= 1.2.0 and < 2.0.0" }
 gleam_erlang = { version = ">= 0.27.0 and < 1.0.0" }
 gleam_json = { version = ">= 2.0.0 and < 3.0.0" }
@@ -55,3 +56,4 @@ gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 mist = { version = ">= 3.0.0 and < 4.0.0" }
 squirrel = { version = ">= 1.7.1 and < 2.0.0" }
 wisp = { version = ">= 1.2.0 and < 2.0.0" }
+youid = { version = ">= 1.2.0 and < 2.0.0" }
