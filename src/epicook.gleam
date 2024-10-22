@@ -1,5 +1,4 @@
 import application/context.{Context}
-import common/errors.{type InitError, ServerStartError, log_error}
 import dot_env
 import env
 import gleam/erlang/process
@@ -8,6 +7,7 @@ import gleam/io
 import gleam/result
 import gleam/string
 import infrastructure/postgres/db
+import logging
 import mist
 import presentation/rest/router
 import wisp/wisp_mist
@@ -27,8 +27,13 @@ pub fn main() -> Nil {
   process.sleep_forever()
 }
 
+type InitError {
+  EnvError(msg: String)
+  ServerStartError
+}
+
 fn start_server() -> Result(Nil, InitError) {
-  use env <- result.try(env.load())
+  use env <- result.try(env.load() |> result.map_error(EnvError))
 
   io.println("Starting Epicook API on port: " <> int.to_string(env.port))
 
@@ -40,7 +45,7 @@ fn start_server() -> Result(Nil, InitError) {
   |> mist.new
   |> mist.port(env.port)
   |> mist.start_http
-  |> result.map_error(log_error)
+  |> result.map_error(logging.log_error)
   |> result.replace_error(ServerStartError)
   |> result.replace(Nil)
 }

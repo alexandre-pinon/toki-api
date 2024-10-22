@@ -1,10 +1,6 @@
 import gleam/pgo
 
 pub type DbError {
-  DecodingFailed(DecoderError)
+  DecodingFailed(reason: String)
   ExecutionFailed(pgo.QueryError)
-}
-
-pub type DecoderError {
-  InvalidUUID
 }

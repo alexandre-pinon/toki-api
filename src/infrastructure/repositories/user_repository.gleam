@@ -1,12 +1,9 @@
 import domain/entities/user.{type User}
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pgo
 import gleam/result
-import gleam/string
-import helpers
 import infrastructure/errors.{type DbError, DecodingFailed, ExecutionFailed}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
@@ -41,10 +38,6 @@ pub fn find_by_id(
   use query_result <- result.try(
     "SELECT id, email, name, google_id FROM users WHERE id = $1;"
     |> db.execute(pool, [pgo.text(uuid.to_string(id))], user_decoder)
-    |> result.map_error(fn(e) {
-      io.println_error(string.inspect(e))
-      e
-    })
     |> result.map_error(ExecutionFailed),
   )
 
@@ -65,7 +58,7 @@ fn from_db_to_domain(
 ) -> Result(User, DbError) {
   let #(id, email, name, google_id) = row
 
-  helpers.map_bit_array_to_string(id)
+  uuid.from_bit_array(id)
+  |> result.replace_error(DecodingFailed("couldn't deserialize id to uuid"))
   |> result.map(user.User(_, email, name, google_id))
-  |> result.map_error(DecodingFailed)
 }

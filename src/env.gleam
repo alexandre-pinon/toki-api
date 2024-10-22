@@ -1,4 +1,3 @@
-import common/errors.{type InitError, EnvError}
 import dot_env/env
 import gleam/result
 
@@ -17,9 +16,9 @@ pub type DbConfig {
   )
 }
 
-pub fn load() -> Result(Env, InitError) {
-  use port <- result.try(env.get_int("PORT") |> result.map_error(EnvError))
-  use db_config <- result.try(load_db_config() |> result.map_error(EnvError))
+pub fn load() -> Result(Env, String) {
+  use port <- result.try(env.get_int("PORT"))
+  use db_config <- result.try(load_db_config())
 
   Ok(Env(port, db_config))
 }

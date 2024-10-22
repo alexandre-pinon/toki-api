@@ -1,9 +1,9 @@
-import common/errors.{log_error}
 import env.{type DbConfig}
 import gleam/dynamic
 import gleam/option.{Some}
 import gleam/pgo
 import gleam/result
+import logging
 
 pub fn connect(db_config: DbConfig) -> pgo.Connection {
   pgo.connect(
@@ -32,5 +32,5 @@ pub fn execute(
   sql
   |> pgo.execute(pool, arguments, decoder)
   |> result.map(fn(returned) { returned.rows })
-  |> result.map_error(log_error)
+  |> result.map_error(logging.log_error)
 }

@@ -7,6 +7,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["/"] -> wisp.ok()
     ["users"] -> users_controller.list(ctx)
     ["users", id] -> users_controller.show(ctx, id)
+
     _ -> wisp.not_found()
   }
 }
