@@ -1,14 +1,12 @@
 import application/context.{type Context}
-import application/dto/user_application_dto.{CreateUserInput}
-import application/use_cases/create_user_use_case
+import application/dto/user_dto.{type CreateUserRequest}
+import application/use_cases/create_user_use_case.{ValidationFailed}
 import domain/entities/user.{type User}
+import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json.{type Json}
 import gleam/option.{None, Some}
 import gleam/string
 import infrastructure/repositories/user_repository
-import presentation/rest/dto/user_rest_dto.{
-  CreateUserRequest, decode_create_user_request,
-}
 import presentation/rest/middlewares
 import wisp.{type Request, type Response}
 import youid/uuid
@@ -46,19 +44,17 @@ pub fn create(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
 
   case decode_create_user_request(json) {
-    Ok(CreateUserRequest(email, name, google_id)) -> {
-      let use_case_result =
-        create_user_use_case.execute(
-          CreateUserInput(email, name, google_id),
-          ctx,
-        )
-
-      case use_case_result {
+    Ok(decoded) -> {
+      case create_user_use_case.execute(decoded, ctx) {
         Ok(Some(user)) ->
           encode_user(user)
           |> json.to_string_builder
           |> wisp.json_response(201)
         Ok(None) -> wisp.unprocessable_entity()
+        Error(ValidationFailed(error)) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.unprocessable_entity()
+        }
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()
@@ -79,4 +75,17 @@ fn encode_user(user: User) -> Json {
     #("name", json.string(user.name)),
     #("google_id", json.nullable(user.google_id, json.string)),
   ])
+}
+
+fn decode_create_user_request(
+  json: Dynamic,
+) -> Result(CreateUserRequest, DecodeErrors) {
+  let decode =
+    dynamic.decode3(
+      user_dto.CreateUserRequest,
+      dynamic.field("email", dynamic.string),
+      dynamic.field("name", dynamic.string),
+      dynamic.optional_field("google_id", dynamic.string),
+    )
+  decode(json)
 }

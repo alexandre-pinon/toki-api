@@ -1,4 +1,4 @@
-import application/dto/user_application_dto.{type CreateUserInput}
+import application/dto/user_dto.{type CreateUserInput}
 import domain/entities/user.{type User}
 import gleam/list
 import gleam/option.{type Option, None, Some}
