@@ -1,4 +1,4 @@
-import application/dto/user_dto.{type CreateUserInput}
+import application/dto/user_dto.{type UserCreateInput}
 import domain/entities/user.{type User}
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -40,7 +40,7 @@ pub fn find_by_id(
 
 pub fn create(
   pool: pgo.Connection,
-  input: CreateUserInput,
+  input: UserCreateInput,
 ) -> Result(User, DbError) {
   let db_input = [
     pgo.text(uuid.v4_string()),

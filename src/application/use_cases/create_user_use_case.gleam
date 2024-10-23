@@ -1,5 +1,5 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type CreateUserInput, type CreateUserRequest}
+import application/dto/user_dto.{type UserCreateInput, type UserCreateRequest}
 import domain/entities/user.{type User}
 import gleam/option.{type Option, None, Some}
 import gleam/pgo.{ConstraintViolated}
@@ -9,7 +9,7 @@ import infrastructure/repositories/user_repository
 import valid.{type NonEmptyList}
 
 pub type CreateUserUseCasePort =
-  CreateUserRequest
+  UserCreateRequest
 
 type CreateUserUseCaseResult =
   Option(User)
@@ -35,7 +35,7 @@ pub fn execute(
 
 fn validate_input(
   port: CreateUserUseCasePort,
-) -> Result(CreateUserInput, CreateUserUseCaseErrors) {
-  user_dto.validate_create_user_request(port)
+) -> Result(UserCreateInput, CreateUserUseCaseErrors) {
+  user_dto.validate_user_create_request(port)
   |> result.map_error(ValidationFailed)
 }

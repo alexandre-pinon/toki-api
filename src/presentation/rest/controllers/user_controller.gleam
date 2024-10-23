@@ -1,5 +1,5 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type CreateUserRequest}
+import application/dto/user_dto.{type UserCreateRequest}
 import application/use_cases/create_user_use_case.{ValidationFailed}
 import domain/entities/user.{type User}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
@@ -43,7 +43,7 @@ pub fn show(ctx: Context, id: String) -> Response {
 pub fn create(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
 
-  case decode_create_user_request(json) {
+  case decode_user_create_request(json) {
     Ok(decoded) -> {
       case create_user_use_case.execute(decoded, ctx) {
         Ok(Some(user)) ->
@@ -77,12 +77,12 @@ fn encode_user(user: User) -> Json {
   ])
 }
 
-fn decode_create_user_request(
+fn decode_user_create_request(
   json: Dynamic,
-) -> Result(CreateUserRequest, DecodeErrors) {
+) -> Result(UserCreateRequest, DecodeErrors) {
   let decode =
     dynamic.decode3(
-      user_dto.CreateUserRequest,
+      user_dto.UserCreateRequest,
       dynamic.field("email", dynamic.string),
       dynamic.field("name", dynamic.string),
       dynamic.optional_field("google_id", dynamic.string),
