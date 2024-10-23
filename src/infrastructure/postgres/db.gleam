@@ -1,10 +1,11 @@
+import app_logger
 import env.{type DbConfig}
 import gleam/dynamic
 import gleam/option.{Some}
 import gleam/pgo
 import gleam/result
+import gleam/string
 import infrastructure/errors.{type DbError, ExecutionFailed}
-import logging
 import wisp
 
 pub fn connect(db_config: DbConfig) -> pgo.Connection {
@@ -17,6 +18,7 @@ pub fn connect(db_config: DbConfig) -> pgo.Connection {
       user: db_config.user,
       password: Some(db_config.password),
       pool_size: db_config.pool_size,
+      trace: True,
     ),
   )
 }
@@ -31,11 +33,17 @@ pub fn execute(
   with arguments: List(pgo.Value),
   expecting decoder: dynamic.Decoder(t),
 ) -> Result(List(t), DbError) {
-  wisp.log_debug("Executing query: " <> sql)
+  wisp.log_debug(
+    "Executing query: "
+    <> sql
+    <> "\n"
+    <> "With arguments"
+    <> string.inspect(arguments),
+  )
 
   sql
   |> pgo.execute(pool, arguments, decoder)
   |> result.map(fn(returned) { returned.rows })
-  |> result.map_error(logging.log_error)
+  |> result.map_error(app_logger.log_error)
   |> result.map_error(ExecutionFailed)
 }

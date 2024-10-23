@@ -1,13 +1,24 @@
 import application/context.{type Context}
-import presentation/rest/controllers/users_controller
+import gleam/http.{Get, Post}
+import presentation/rest/controllers/user_controller
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
+  use <- wisp.log_request(req)
+
   case wisp.path_segments(req) {
     ["/"] -> wisp.ok()
-    ["users"] -> users_controller.list(ctx)
-    ["users", id] -> users_controller.show(ctx, id)
+    ["users"] -> handle_users(req, ctx)
+    ["users", id] -> user_controller.show(ctx, id)
 
     _ -> wisp.not_found()
+  }
+}
+
+fn handle_users(req: Request, ctx: Context) -> Response {
+  case req.method {
+    Get -> user_controller.list(ctx)
+    Post -> user_controller.create(req, ctx)
+    _ -> wisp.method_not_allowed([Get, Post])
   }
 }

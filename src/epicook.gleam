@@ -1,3 +1,4 @@
+import app_logger
 import application/context.{Context}
 import dot_env
 import env
@@ -7,13 +8,16 @@ import gleam/io
 import gleam/result
 import gleam/string
 import infrastructure/postgres/db
-import logging
 import mist
 import presentation/rest/router
+import wisp.{DebugLevel}
 import wisp/wisp_mist
 
 pub fn main() -> Nil {
   dot_env.load_default()
+  wisp.configure_logger()
+  // TODO: change log level dynamically in dev/prod
+  wisp.set_logger_level(DebugLevel)
 
   case start_server() {
     Ok(Nil) -> {
@@ -45,7 +49,7 @@ fn start_server() -> Result(Nil, InitError) {
   |> mist.new
   |> mist.port(env.port)
   |> mist.start_http
-  |> result.map_error(logging.log_error)
+  |> result.map_error(app_logger.log_error)
   |> result.replace_error(ServerStartError)
   |> result.replace(Nil)
 }
