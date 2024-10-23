@@ -3,7 +3,9 @@ import gleam/dynamic
 import gleam/option.{Some}
 import gleam/pgo
 import gleam/result
+import infrastructure/errors.{type DbError, ExecutionFailed}
 import logging
+import wisp
 
 pub fn connect(db_config: DbConfig) -> pgo.Connection {
   pgo.connect(
@@ -28,9 +30,12 @@ pub fn execute(
   on pool: pgo.Connection,
   with arguments: List(pgo.Value),
   expecting decoder: dynamic.Decoder(t),
-) -> Result(List(t), pgo.QueryError) {
+) -> Result(List(t), DbError) {
+  wisp.log_debug("Executing query: " <> sql)
+
   sql
   |> pgo.execute(pool, arguments, decoder)
   |> result.map(fn(returned) { returned.rows })
   |> result.map_error(logging.log_error)
+  |> result.map_error(ExecutionFailed)
 }
