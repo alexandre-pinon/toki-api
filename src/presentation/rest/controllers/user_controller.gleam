@@ -47,15 +47,13 @@ pub fn create(req: Request, ctx: Context) -> Response {
   case decode_user_create_request(json) {
     Ok(decoded) -> {
       case create_user_use_case.execute(decoded, ctx) {
-        Ok(Some(user)) ->
+        Ok(user) ->
           encode_user(user)
           |> json.to_string_builder
           |> wisp.json_response(201)
-        Ok(None) -> wisp.unprocessable_entity()
-        Error(create_user_use_case.ValidationFailed(error)) -> {
-          wisp.log_error(string.inspect(error))
+        Error(create_user_use_case.EmailAlreadyExists) -> wisp.response(409)
+        Error(create_user_use_case.ValidationFailed(_)) ->
           wisp.unprocessable_entity()
-        }
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()
@@ -78,15 +76,14 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
       let port = UpdateUserUseCasePort(user_id, decoded)
 
       case update_user_use_case.execute(port, ctx) {
-        Ok(Some(user)) ->
+        Ok(user) ->
           encode_user(user)
           |> json.to_string_builder
           |> wisp.json_response(200)
-        Ok(None) -> wisp.unprocessable_entity()
-        Error(update_user_use_case.ValidationFailed(error)) -> {
-          wisp.log_error(string.inspect(error))
+        Error(update_user_use_case.UserNotFound) -> wisp.not_found()
+        Error(update_user_use_case.EmailAlreadyExists) -> wisp.response(409)
+        Error(update_user_use_case.ValidationFailed(_)) ->
           wisp.unprocessable_entity()
-        }
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()

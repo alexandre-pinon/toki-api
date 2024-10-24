@@ -1,10 +1,9 @@
 import application/context.{type Context}
 import application/dto/user_dto.{type UserUpdateInput, type UserUpdateRequest}
 import domain/entities/user.{type User}
-import gleam/option.{type Option, None, Some}
 import gleam/pgo.{ConstraintViolated}
 import gleam/result
-import infrastructure/errors.{type DbError, ExecutionFailed}
+import infrastructure/errors.{type DbError, EntityNotFound, ExecutionFailed}
 import infrastructure/repositories/user_repository
 import valid.{type NonEmptyList}
 import youid/uuid.{type Uuid}
@@ -14,11 +13,13 @@ pub type UpdateUserUseCasePort {
 }
 
 type UpdateUserUseCaseResult =
-  Option(User)
+  User
 
 pub type UpdateUserUseCaseErrors {
   ValidationFailed(NonEmptyList(String))
   InsertFailed(DbError)
+  EmailAlreadyExists
+  UserNotFound
 }
 
 pub fn execute(
@@ -28,9 +29,10 @@ pub fn execute(
   use user_update_input <- result.try(validate_input(port))
 
   case user_repository.update(ctx.pool, port.id, user_update_input) {
-    Ok(user) -> Ok(Some(user))
+    Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
-      Ok(None)
+      Error(EmailAlreadyExists)
+    Error(EntityNotFound) -> Error(UserNotFound)
     Error(error) -> Error(InsertFailed(error))
   }
 }

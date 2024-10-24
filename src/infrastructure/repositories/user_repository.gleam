@@ -5,7 +5,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/pgo
 import gleam/result
 import infrastructure/decoders/user_decoder
-import infrastructure/errors.{type DbError, DecodingFailed}
+import infrastructure/errors.{type DbError, EntityNotFound}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
@@ -59,7 +59,7 @@ pub fn create(
   )
 
   list.first(query_result)
-  |> result.replace_error(DecodingFailed("no result from insert user"))
+  |> result.replace_error(EntityNotFound)
   |> result.then(user_decoder.from_db_to_domain)
 }
 
@@ -89,6 +89,6 @@ pub fn update(
   )
 
   list.first(query_result)
-  |> result.replace_error(DecodingFailed("no result from update user"))
+  |> result.replace_error(EntityNotFound)
   |> result.then(user_decoder.from_db_to_domain)
 }
