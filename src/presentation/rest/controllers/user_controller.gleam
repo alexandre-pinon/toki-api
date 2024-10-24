@@ -1,6 +1,7 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type UserCreateRequest}
-import application/use_cases/create_user_use_case.{ValidationFailed}
+import application/dto/user_dto.{type UserCreateRequest, type UserUpdateRequest}
+import application/use_cases/create_user_use_case
+import application/use_cases/update_user_use_case.{UpdateUserUseCasePort}
 import domain/entities/user.{type User}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json.{type Json}
@@ -51,7 +52,38 @@ pub fn create(req: Request, ctx: Context) -> Response {
           |> json.to_string_builder
           |> wisp.json_response(201)
         Ok(None) -> wisp.unprocessable_entity()
-        Error(ValidationFailed(error)) -> {
+        Error(create_user_use_case.ValidationFailed(error)) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.unprocessable_entity()
+        }
+        Error(error) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.internal_server_error()
+        }
+      }
+    }
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.unprocessable_entity()
+    }
+  }
+}
+
+pub fn update(req: Request, ctx: Context, id: String) -> Response {
+  use user_id <- middlewares.require_uuid(id)
+  use json <- wisp.require_json(req)
+
+  case decode_user_update_request(json) {
+    Ok(decoded) -> {
+      let port = UpdateUserUseCasePort(user_id, decoded)
+
+      case update_user_use_case.execute(port, ctx) {
+        Ok(Some(user)) ->
+          encode_user(user)
+          |> json.to_string_builder
+          |> wisp.json_response(200)
+        Ok(None) -> wisp.unprocessable_entity()
+        Error(update_user_use_case.ValidationFailed(error)) -> {
           wisp.log_error(string.inspect(error))
           wisp.unprocessable_entity()
         }
@@ -85,6 +117,19 @@ fn decode_user_create_request(
       user_dto.UserCreateRequest,
       dynamic.field("email", dynamic.string),
       dynamic.field("name", dynamic.string),
+      dynamic.optional_field("google_id", dynamic.string),
+    )
+  decode(json)
+}
+
+fn decode_user_update_request(
+  json: Dynamic,
+) -> Result(UserUpdateRequest, DecodeErrors) {
+  let decode =
+    dynamic.decode3(
+      user_dto.UserUpdateRequest,
+      dynamic.optional_field("email", dynamic.string),
+      dynamic.optional_field("name", dynamic.string),
       dynamic.optional_field("google_id", dynamic.string),
     )
   decode(json)

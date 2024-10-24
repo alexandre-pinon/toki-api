@@ -1,4 +1,4 @@
-import application/dto/user_dto.{type UserCreateInput}
+import application/dto/user_dto.{type UserCreateInput, type UserUpdateInput}
 import domain/entities/user.{type User}
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -42,7 +42,7 @@ pub fn create(
   pool: pgo.Connection,
   input: UserCreateInput,
 ) -> Result(User, DbError) {
-  let db_input = [
+  let query_input = [
     pgo.text(uuid.v4_string()),
     pgo.text(input.email),
     pgo.text(input.name),
@@ -55,10 +55,40 @@ pub fn create(
       VALUES ($1, $2, $3, $4, DEFAULT, NOW())
       RETURNING id, email, name, google_id
     "
-    |> db.execute(pool, db_input, user_decoder.new()),
+    |> db.execute(pool, query_input, user_decoder.new()),
   )
 
   list.first(query_result)
-  |> result.replace_error(DecodingFailed("no result from insert"))
+  |> result.replace_error(DecodingFailed("no result from insert user"))
+  |> result.then(user_decoder.from_db_to_domain)
+}
+
+pub fn update(
+  pool: pgo.Connection,
+  id: Uuid,
+  input: UserUpdateInput,
+) -> Result(User, DbError) {
+  let query_input = [
+    pgo.nullable(pgo.text, input.email),
+    pgo.nullable(pgo.text, input.name),
+    pgo.nullable(pgo.text, input.google_id),
+    pgo.text(uuid.to_string(id)),
+  ]
+
+  use query_result <- result.try(
+    "
+      UPDATE users
+      SET email = COALESCE($1, email),
+          name = COALESCE($2, name),
+          google_id = COALESCE($3, google_id),
+          updated_at = NOW()
+      WHERE id = $4
+      RETURNING id, email, name, google_id
+    "
+    |> db.execute(pool, query_input, user_decoder.new()),
+  )
+
+  list.first(query_result)
+  |> result.replace_error(DecodingFailed("no result from update user"))
   |> result.then(user_decoder.from_db_to_domain)
 }
