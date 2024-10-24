@@ -10,9 +10,37 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.refresh_tokens (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    token text NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
@@ -35,6 +63,14 @@ CREATE TABLE public.users (
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone
 );
+
+
+--
+-- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT refresh_tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -62,6 +98,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: refresh_tokens refresh_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT refresh_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -71,4 +115,5 @@ ALTER TABLE ONLY public.users
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20241020174630');
+    ('20241020174630'),
+    ('20241024184328');
