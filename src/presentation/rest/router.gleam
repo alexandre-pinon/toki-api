@@ -1,5 +1,5 @@
 import application/context.{type Context}
-import gleam/http.{Get, Post, Put}
+import gleam/http.{Delete, Get, Post, Put}
 import presentation/rest/controllers/user_controller
 import wisp.{type Request, type Response}
 
@@ -27,6 +27,7 @@ fn handle_user(req: Request, ctx: Context, id: String) -> Response {
   case req.method {
     Get -> user_controller.show(ctx, id)
     Put -> user_controller.update(req, ctx, id)
-    _ -> wisp.method_not_allowed([Get, Put])
+    Delete -> user_controller.delete(ctx, id)
+    _ -> wisp.method_not_allowed([Get, Put, Delete])
   }
 }

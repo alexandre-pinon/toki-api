@@ -97,6 +97,19 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   }
 }
 
+pub fn delete(ctx: Context, id: String) -> Response {
+  use user_id <- middlewares.require_uuid(id)
+
+  case user_repository.delete(ctx.pool, user_id) {
+    Ok(True) -> wisp.no_content()
+    Ok(False) -> wisp.not_found()
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
+    }
+  }
+}
+
 fn encode_user(user: User) -> Json {
   json.object([
     #("id", json.string(uuid.to_string(user.id) |> string.lowercase)),

@@ -32,7 +32,7 @@ pub fn execute(
   on pool: pgo.Connection,
   with arguments: List(pgo.Value),
   expecting decoder: dynamic.Decoder(t),
-) -> Result(List(t), DbError) {
+) -> Result(pgo.Returned(t), DbError) {
   wisp.log_debug(
     "Executing query: "
     <> sql
@@ -43,7 +43,6 @@ pub fn execute(
 
   sql
   |> pgo.execute(pool, arguments, decoder)
-  |> result.map(fn(returned) { returned.rows })
   |> result.map_error(app_logger.log_error)
   |> result.map_error(ExecutionFailed)
 }
