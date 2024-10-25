@@ -61,7 +61,8 @@ CREATE TABLE public.users (
     name text NOT NULL,
     google_id text,
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    password_hash text
 );
 
 
@@ -116,4 +117,5 @@ ALTER TABLE ONLY public.refresh_tokens
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20241020174630'),
-    ('20241024184328');
+    ('20241024184328'),
+    ('20241025064421');

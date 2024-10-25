@@ -1,4 +1,7 @@
-import application/dto/user_dto.{type UserCreateInput, type UserUpdateInput}
+import application/dto/user_dto.{
+  type RegisterInput, type UserUpdateInput, GoogleRegisterInput,
+  PasswordRegisterInput,
+}
 import domain/entities/user.{type User}
 import gleam/list
 import gleam/option.{type Option, None, Some}
@@ -41,21 +44,62 @@ pub fn find_by_id(
 
 pub fn create(
   pool: pgo.Connection,
-  input: UserCreateInput,
+  input: RegisterInput,
+) -> Result(User, DbError) {
+  case input {
+    GoogleRegisterInput(email, name, google_id) ->
+      create_with_google_input(pool, email, name, google_id)
+    PasswordRegisterInput(email, name, password_hash) ->
+      create_with_password_input(pool, email, name, password_hash)
+  }
+}
+
+fn create_with_google_input(
+  pool: pgo.Connection,
+  email: String,
+  name: String,
+  google_id: Option(String),
 ) -> Result(User, DbError) {
   let query_input = [
     pgo.text(uuid.v4_string()),
-    pgo.text(input.email),
-    pgo.text(input.name),
-    pgo.nullable(pgo.text, input.google_id),
+    pgo.text(email),
+    pgo.text(name),
+    pgo.nullable(pgo.text, google_id),
   ]
 
   use query_result <- result.try(
     "
-      INSERT INTO users (id, email, name, google_id, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, DEFAULT, NOW())
-      RETURNING id, email, name, google_id
+        INSERT INTO users (id, email, name, google_id, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, DEFAULT, NOW())
+        RETURNING id, email, name, google_id
+      "
+    |> db.execute(pool, query_input, user_decoder.new()),
+  )
+
+  list.first(query_result.rows)
+  |> result.replace_error(EntityNotFound)
+  |> result.then(user_decoder.from_db_to_domain)
+}
+
+fn create_with_password_input(
+  pool: pgo.Connection,
+  email: String,
+  name: String,
+  password_hash: String,
+) -> Result(User, DbError) {
+  let query_input = [
+    pgo.text(uuid.v4_string()),
+    pgo.text(email),
+    pgo.text(name),
+    pgo.text(password_hash),
+  ]
+
+  use query_result <- result.try(
     "
+        INSERT INTO users (id, email, name, password_hash, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, DEFAULT, NOW())
+        RETURNING id, email, name, google_id
+      "
     |> db.execute(pool, query_input, user_decoder.new()),
   )
 

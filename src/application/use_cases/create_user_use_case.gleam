@@ -1,5 +1,8 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type UserCreateInput, type UserCreateRequest}
+import application/dto/user_dto.{
+  type RegisterInput, type RegisterRequest, PasswordRegisterInput,
+}
+import beecrypt
 import domain/entities/user.{type User}
 import gleam/pgo.{ConstraintViolated}
 import gleam/result
@@ -8,7 +11,7 @@ import infrastructure/repositories/user_repository
 import valid.{type NonEmptyList}
 
 pub type CreateUserUseCasePort =
-  UserCreateRequest
+  RegisterRequest
 
 type CreateUserUseCaseResult =
   User
@@ -17,15 +20,23 @@ pub type CreateUserUseCaseErrors {
   ValidationFailed(NonEmptyList(String))
   InsertFailed(DbError)
   EmailAlreadyExists
+  PasswordHashFailed(reason: String)
 }
 
 pub fn execute(
   port: CreateUserUseCasePort,
   ctx: Context,
 ) -> Result(CreateUserUseCaseResult, CreateUserUseCaseErrors) {
-  use user_create_input <- result.try(validate_input(port))
+  use validated_input <- result.try(validate_input(port))
 
-  case user_repository.create(ctx.pool, user_create_input) {
+  let register_input = case validated_input {
+    PasswordRegisterInput(email, name, password) -> {
+      PasswordRegisterInput(email, name, beecrypt.hash(password))
+    }
+    _ -> validated_input
+  }
+
+  case user_repository.create(ctx.pool, register_input) {
     Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)
@@ -35,7 +46,7 @@ pub fn execute(
 
 fn validate_input(
   port: CreateUserUseCasePort,
-) -> Result(UserCreateInput, CreateUserUseCaseErrors) {
-  user_dto.validate_user_create_request(port)
+) -> Result(RegisterInput, CreateUserUseCaseErrors) {
+  user_dto.validate_register_request(port)
   |> result.map_error(ValidationFailed)
 }
