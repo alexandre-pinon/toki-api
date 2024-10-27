@@ -43,7 +43,7 @@ fn start_server() -> Result(Nil, InitError) {
 
   let pool = db.connect(env.db_config)
   let ctx =
-    Context(app_name: env.app_name, pool: pool, jwt_config: env.jwt_config)
+    Context(app_name: env.app_name, pool: pool, token_config: env.token_config)
   let handler = router.handle_request(_, ctx)
 
   wisp_mist.handler(handler, "SECRET_KEY_BASE")
