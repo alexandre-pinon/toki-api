@@ -1,8 +1,10 @@
 import domain/entities/user.{type User}
 import gleam/dynamic.{type Decoder}
 import gleam/option.{type Option}
+import gleam/pgo
 import gleam/result
-import infrastructure/errors.{type DbError, DecodingFailed}
+import infrastructure/decoders/common_decoder
+import infrastructure/errors.{type DbError}
 import youid/uuid
 
 type UserRow =
@@ -18,10 +20,20 @@ pub fn new() -> Decoder(UserRow) {
   )
 }
 
+pub fn from_domain_to_db(user: User) -> List(pgo.Value) {
+  [
+    pgo.text(uuid.to_string(user.id)),
+    pgo.text(user.email),
+    pgo.text(user.name),
+    pgo.nullable(pgo.text, user.google_id),
+    pgo.nullable(pgo.text, user.password_hash),
+  ]
+}
+
 pub fn from_db_to_domain(user_row: UserRow) -> Result(User, DbError) {
   let #(id, email, name, google_id, password_hash) = user_row
 
-  uuid.from_bit_array(id)
-  |> result.replace_error(DecodingFailed("couldn't deserialize id to uuid"))
-  |> result.map(user.User(_, email, name, google_id, password_hash))
+  use id <- result.try(common_decoder.from_db_uuid_to_domain_uuid(id))
+
+  Ok(user.User(id, email, name, google_id, password_hash))
 }

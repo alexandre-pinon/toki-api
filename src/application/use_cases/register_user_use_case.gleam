@@ -1,14 +1,17 @@
 import application/context.{type Context}
 import application/dto/user_dto.{
-  type RegisterInput, type RegisterRequest, PasswordRegisterInput,
+  type RegisterInput, type RegisterRequest, GoogleRegisterInput,
+  PasswordRegisterInput,
 }
 import beecrypt
 import domain/entities/user.{type User}
+import gleam/option.{None, Some}
 import gleam/pgo.{ConstraintViolated}
 import gleam/result
 import infrastructure/errors.{type DbError, ExecutionFailed}
 import infrastructure/repositories/user_repository
 import valid.{type NonEmptyList}
+import youid/uuid
 
 pub type RegisterUserUseCasePort =
   RegisterRequest
@@ -29,14 +32,27 @@ pub fn execute(
 ) -> Result(RegisterUserUseCaseResult, RegisterUserUseCaseErrors) {
   use validated_input <- result.try(validate_input(port))
 
-  let register_input = case validated_input {
+  let user = case validated_input {
     PasswordRegisterInput(email, name, password) -> {
-      PasswordRegisterInput(email, name, beecrypt.hash(password))
+      user.User(
+        id: uuid.v4(),
+        email: email,
+        name: name,
+        google_id: None,
+        password_hash: Some(beecrypt.hash(password)),
+      )
     }
-    _ -> validated_input
+    GoogleRegisterInput(email, name, google_id) ->
+      user.User(
+        id: uuid.v4(),
+        email: email,
+        name: name,
+        google_id: google_id,
+        password_hash: None,
+      )
   }
 
-  case user_repository.create(ctx.pool, register_input) {
+  case user_repository.create(ctx.pool, user) {
     Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)
