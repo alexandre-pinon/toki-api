@@ -29,7 +29,7 @@ pub fn list(ctx: Context) -> Response {
 pub fn show(ctx: Context, id: String) -> Response {
   use user_id <- middlewares.require_uuid(id)
 
-  case user_repository.find_by_id(ctx.pool, user_id) {
+  case user_repository.find_by_id(user_id, ctx.pool) {
     Ok(Some(user)) ->
       encoders.encode_user(user)
       |> json.to_string_builder
@@ -101,7 +101,7 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
 pub fn delete(ctx: Context, id: String) -> Response {
   use user_id <- middlewares.require_uuid(id)
 
-  case user_repository.delete(ctx.pool, user_id) {
+  case user_repository.delete(user_id, ctx.pool) {
     Ok(True) -> wisp.no_content()
     Ok(False) -> wisp.not_found()
     Error(error) -> {

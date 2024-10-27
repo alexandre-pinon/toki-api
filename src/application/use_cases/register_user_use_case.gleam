@@ -52,7 +52,7 @@ pub fn execute(
       )
   }
 
-  case user_repository.create(ctx.pool, user) {
+  case user_repository.create(user, ctx.pool) {
     Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)

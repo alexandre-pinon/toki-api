@@ -28,7 +28,7 @@ pub fn execute(
 ) -> Result(UpdateUserUseCaseResult, UpdateUserUseCaseErrors) {
   use user_update_input <- result.try(validate_input(port))
 
-  case user_repository.update(ctx.pool, port.id, user_update_input) {
+  case user_repository.update(port.id, user_update_input, ctx.pool) {
     Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)

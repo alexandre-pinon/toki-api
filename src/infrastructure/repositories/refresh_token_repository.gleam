@@ -11,8 +11,8 @@ import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
 pub fn find_all_active(
-  pool: pgo.Connection,
   user_id: Uuid,
+  on pool: pgo.Connection,
 ) -> Result(List(RefreshToken), DbError) {
   let user_id = pgo.text(uuid.to_string(user_id))
 
@@ -28,8 +28,8 @@ pub fn find_all_active(
 }
 
 pub fn create(
-  pool: pgo.Connection,
   refresh_token: RefreshToken,
+  on pool: pgo.Connection,
 ) -> Result(RefreshToken, DbError) {
   let query_input = refresh_token_decoder.from_domain_to_db(refresh_token)
 
@@ -50,7 +50,7 @@ pub fn create(
 pub fn replace(
   token old_id: Uuid,
   by new_id: Uuid,
-  using pool: pgo.Connection,
+  on pool: pgo.Connection,
 ) -> Result(Nil, DbError) {
   let replaced_at = birl.now()
   let expires_at = birl.add(replaced_at, duration.minutes(1))

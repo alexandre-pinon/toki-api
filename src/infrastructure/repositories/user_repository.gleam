@@ -9,7 +9,7 @@ import infrastructure/errors.{type DbError, EntityNotFound}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
-pub fn find_all(pool: pgo.Connection) -> Result(List(User), DbError) {
+pub fn find_all(on pool: pgo.Connection) -> Result(List(User), DbError) {
   "SELECT id, email, name, google_id, password_hash FROM users"
   |> db.execute(pool, [], user_decoder.new())
   |> result.map(fn(returned) { returned.rows })
@@ -17,8 +17,8 @@ pub fn find_all(pool: pgo.Connection) -> Result(List(User), DbError) {
 }
 
 pub fn find_by_id(
-  pool: pgo.Connection,
   id: Uuid,
+  on pool: pgo.Connection,
 ) -> Result(Option(User), DbError) {
   let user_id = pgo.text(uuid.to_string(id))
 
@@ -40,8 +40,8 @@ pub fn find_by_id(
 }
 
 pub fn find_by_email(
-  pool: pgo.Connection,
   email: String,
+  on pool: pgo.Connection,
 ) -> Result(Option(User), DbError) {
   use query_result <- result.try(
     "SELECT id, email, name, google_id, password_hash FROM users WHERE email = $1"
@@ -60,7 +60,7 @@ pub fn find_by_email(
   }
 }
 
-pub fn create(pool: pgo.Connection, user: User) -> Result(User, DbError) {
+pub fn create(user: User, on pool: pgo.Connection) -> Result(User, DbError) {
   let query_input = user_decoder.from_domain_to_db(user)
 
   use query_result <- result.try(
@@ -78,9 +78,9 @@ pub fn create(pool: pgo.Connection, user: User) -> Result(User, DbError) {
 }
 
 pub fn update(
-  pool: pgo.Connection,
   id: Uuid,
   input: UserUpdateInput,
+  on pool: pgo.Connection,
 ) -> Result(User, DbError) {
   let query_input = [
     pgo.nullable(pgo.text, input.email),
@@ -107,7 +107,7 @@ pub fn update(
   |> result.then(user_decoder.from_db_to_domain)
 }
 
-pub fn delete(pool: pgo.Connection, id: Uuid) -> Result(Bool, DbError) {
+pub fn delete(id: Uuid, on pool: pgo.Connection) -> Result(Bool, DbError) {
   let user_id = pgo.text(uuid.to_string(id))
 
   "DELETE FROM users WHERE id = $1"

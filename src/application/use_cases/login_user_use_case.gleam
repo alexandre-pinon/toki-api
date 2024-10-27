@@ -40,7 +40,7 @@ pub fn execute(
   port: LoginUserUseCasePort,
   ctx: Context,
 ) -> Result(LoginUserUseCaseResult, LoginUserUseCaseErrors) {
-  let maybe_user = user_repository.find_by_email(ctx.pool, port.email)
+  let maybe_user = user_repository.find_by_email(port.email, ctx.pool)
 
   case maybe_user {
     Ok(Some(user)) -> {
@@ -94,13 +94,13 @@ fn create_new_refresh_token(
   transaction: pgo.Connection,
 ) -> Result(String, String) {
   use active_token_ids <- result.try(
-    refresh_token_repository.find_all_active(transaction, user_id)
+    refresh_token_repository.find_all_active(user_id, transaction)
     |> result.map(list.map(_, fn(token: RefreshToken) { token.id }))
     |> result.replace_error("find all active tokens failed"),
   )
 
   generate_refresh_token(user_id, token_config)
-  |> refresh_token_repository.create(transaction, _)
+  |> refresh_token_repository.create(transaction)
   |> result.then(fn(refresh_token) {
     use _ <- result.try(replace_active_refresh_tokens(
       active_token_ids,
