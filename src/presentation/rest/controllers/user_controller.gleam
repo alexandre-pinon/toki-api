@@ -2,7 +2,7 @@ import application/context.{type Context}
 import application/dto/user_dto.{
   type RegisterRequest, type UserUpdateRequest, GoogleRegisterRequest,
 }
-import application/use_cases/create_user_use_case
+import application/use_cases/register_user_use_case
 import application/use_cases/update_user_use_case.{UpdateUserUseCasePort}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
@@ -47,13 +47,13 @@ pub fn create(req: Request, ctx: Context) -> Response {
 
   case decode_google_register_request(json) {
     Ok(decoded) -> {
-      case create_user_use_case.execute(decoded, ctx) {
+      case register_user_use_case.execute(decoded, ctx) {
         Ok(user) ->
           encoders.encode_user(user)
           |> json.to_string_builder
           |> wisp.json_response(201)
-        Error(create_user_use_case.EmailAlreadyExists) -> wisp.response(409)
-        Error(create_user_use_case.ValidationFailed(_)) ->
+        Error(register_user_use_case.EmailAlreadyExists) -> wisp.response(409)
+        Error(register_user_use_case.ValidationFailed(_)) ->
           wisp.unprocessable_entity()
         Error(error) -> {
           wisp.log_error(string.inspect(error))

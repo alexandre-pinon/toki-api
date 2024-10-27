@@ -10,13 +10,13 @@ import infrastructure/errors.{type DbError, ExecutionFailed}
 import infrastructure/repositories/user_repository
 import valid.{type NonEmptyList}
 
-pub type CreateUserUseCasePort =
+pub type RegisterUserUseCasePort =
   RegisterRequest
 
-type CreateUserUseCaseResult =
+type RegisterUserUseCaseResult =
   User
 
-pub type CreateUserUseCaseErrors {
+pub type RegisterUserUseCaseErrors {
   ValidationFailed(NonEmptyList(String))
   InsertFailed(DbError)
   EmailAlreadyExists
@@ -24,9 +24,9 @@ pub type CreateUserUseCaseErrors {
 }
 
 pub fn execute(
-  port: CreateUserUseCasePort,
+  port: RegisterUserUseCasePort,
   ctx: Context,
-) -> Result(CreateUserUseCaseResult, CreateUserUseCaseErrors) {
+) -> Result(RegisterUserUseCaseResult, RegisterUserUseCaseErrors) {
   use validated_input <- result.try(validate_input(port))
 
   let register_input = case validated_input {
@@ -45,8 +45,8 @@ pub fn execute(
 }
 
 fn validate_input(
-  port: CreateUserUseCasePort,
-) -> Result(RegisterInput, CreateUserUseCaseErrors) {
+  port: RegisterUserUseCasePort,
+) -> Result(RegisterInput, RegisterUserUseCaseErrors) {
   user_dto.validate_register_request(port)
   |> result.map_error(ValidationFailed)
 }
