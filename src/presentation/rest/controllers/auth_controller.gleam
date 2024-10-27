@@ -42,11 +42,10 @@ pub fn login(req: Request, ctx: Context) -> Response {
   case decode_login_request(json) {
     Ok(decoded) -> {
       case login_user_use_case.execute(decoded, ctx) {
-        Ok(True) ->
-          json.object([#("valid_credentials", json.bool(True))])
+        Ok(result) ->
+          json.object([#("access_token", json.string(result.access_token))])
           |> json.to_string_builder
           |> wisp.json_response(200)
-        Ok(False) -> wisp.response(401)
         Error(InvalidCredentials) -> wisp.response(401)
         Error(error) -> {
           wisp.log_error(string.inspect(error))

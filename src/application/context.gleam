@@ -1,5 +1,6 @@
+import env
 import gleam/pgo
 
 pub type Context {
-  Context(pool: pgo.Connection)
+  Context(app_name: String, pool: pgo.Connection, jwt_config: env.JwtConfig)
 }

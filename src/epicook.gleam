@@ -41,8 +41,9 @@ fn start_server() -> Result(Nil, InitError) {
 
   io.println("Starting Epicook API on port: " <> int.to_string(env.port))
 
-  let db = db.connect(env.db_config)
-  let ctx = Context(db)
+  let pool = db.connect(env.db_config)
+  let ctx =
+    Context(app_name: env.app_name, pool: pool, jwt_config: env.jwt_config)
   let handler = router.handle_request(_, ctx)
 
   wisp_mist.handler(handler, "SECRET_KEY_BASE")

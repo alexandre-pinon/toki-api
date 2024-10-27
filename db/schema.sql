@@ -38,7 +38,8 @@ CREATE TABLE public.refresh_tokens (
     token text NOT NULL,
     expires_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    revoked_at timestamp with time zone
 );
 
 
@@ -118,4 +119,5 @@ ALTER TABLE ONLY public.refresh_tokens
 INSERT INTO public.schema_migrations (version) VALUES
     ('20241020174630'),
     ('20241024184328'),
-    ('20241025064421');
+    ('20241025064421'),
+    ('20241027075135');
