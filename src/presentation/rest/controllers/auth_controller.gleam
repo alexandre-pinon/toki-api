@@ -21,8 +21,10 @@ pub fn register(req: Request, ctx: Context) -> Response {
           |> json.to_string_builder
           |> wisp.json_response(201)
         Error(register_user_use_case.EmailAlreadyExists) -> wisp.response(409)
-        Error(register_user_use_case.ValidationFailed(_)) ->
+        Error(register_user_use_case.ValidationFailed(error)) -> {
+          wisp.log_debug(string.inspect(error))
           wisp.unprocessable_entity()
+        }
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()

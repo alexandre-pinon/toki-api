@@ -1,4 +1,7 @@
+import gleam/list
 import gleam/option.{type Option}
+import gleam/string
+import non_empty_list
 import valid.{type ValidatorResult}
 
 pub type LoginRequest {
@@ -26,11 +29,51 @@ pub fn validate_register_request(
       |> valid.check(google_id, valid.ok())
     }
     PasswordRegisterRequest(email, name, password) -> {
+      let validate_password =
+        valid.string_is_not_empty("empty password")
+        |> valid.then(valid.string_min_length(
+          8,
+          "password must be 8 characters min",
+        ))
+        |> valid.then(must_contain_number(_, "password"))
+        |> valid.then(must_contain_special_char(_, "password"))
+
       valid.build3(PasswordRegisterInput)
       |> valid.check(email, valid.string_is_email("invalid email"))
       |> valid.check(name, valid.string_is_not_empty("empty name"))
-      |> valid.check(password, valid.string_is_not_empty("empty password"))
+      |> valid.check(password, validate_password)
     }
+  }
+}
+
+fn must_contain_number(
+  str: String,
+  field: String,
+) -> ValidatorResult(String, String) {
+  let has_number =
+    string.to_graphemes(str)
+    |> list.any(string.contains("0123456789", _))
+
+  case has_number {
+    True -> Ok(str)
+    False -> Error(non_empty_list.new(field <> " must contain a number", []))
+  }
+}
+
+fn must_contain_special_char(
+  str: String,
+  field: String,
+) -> ValidatorResult(String, String) {
+  let has_special_char =
+    string.to_graphemes(str)
+    |> list.any(string.contains("!@#$%^&*()_+-=[]{}|;:,.<>?", _))
+
+  case has_special_char {
+    True -> Ok(str)
+    False ->
+      Error(
+        non_empty_list.new(field <> " must contain a special character", []),
+      )
   }
 }
 
