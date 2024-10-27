@@ -13,7 +13,7 @@ import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
 pub fn find_all(pool: pgo.Connection) -> Result(List(User), DbError) {
-  "SELECT id, email, name, google_id FROM users"
+  "SELECT id, email, name, google_id, password_hash FROM users"
   |> db.execute(pool, [], user_decoder.new())
   |> result.map(fn(returned) { returned.rows })
   |> result.then(list.try_map(_, user_decoder.from_db_to_domain))
@@ -26,8 +26,29 @@ pub fn find_by_id(
   let user_id = pgo.text(uuid.to_string(id))
 
   use query_result <- result.try(
-    "SELECT id, email, name, google_id FROM users WHERE id = $1"
+    "SELECT id, email, name, google_id, password_hash FROM users WHERE id = $1"
     |> db.execute(pool, [user_id], user_decoder.new()),
+  )
+
+  let maybe_user =
+    list.first(query_result.rows)
+    |> option.from_result
+    |> option.map(user_decoder.from_db_to_domain)
+
+  case maybe_user {
+    Some(Error(error)) -> Error(error)
+    Some(Ok(user)) -> Ok(Some(user))
+    None -> Ok(None)
+  }
+}
+
+pub fn find_by_email(
+  pool: pgo.Connection,
+  email: String,
+) -> Result(Option(User), DbError) {
+  use query_result <- result.try(
+    "SELECT id, email, name, google_id, password_hash FROM users WHERE email = $1"
+    |> db.execute(pool, [pgo.text(email)], user_decoder.new()),
   )
 
   let maybe_user =
@@ -71,7 +92,7 @@ fn create_with_google_input(
     "
         INSERT INTO users (id, email, name, google_id, created_at, updated_at)
         VALUES ($1, $2, $3, $4, DEFAULT, NOW())
-        RETURNING id, email, name, google_id
+        RETURNING id, email, name, google_id, password_hash
       "
     |> db.execute(pool, query_input, user_decoder.new()),
   )
@@ -98,7 +119,7 @@ fn create_with_password_input(
     "
         INSERT INTO users (id, email, name, password_hash, created_at, updated_at)
         VALUES ($1, $2, $3, $4, DEFAULT, NOW())
-        RETURNING id, email, name, google_id
+        RETURNING id, email, name, google_id, password_hash
       "
     |> db.execute(pool, query_input, user_decoder.new()),
   )
@@ -128,7 +149,7 @@ pub fn update(
           google_id = COALESCE($3, google_id),
           updated_at = NOW()
       WHERE id = $4
-      RETURNING id, email, name, google_id
+      RETURNING id, email, name, google_id, password_hash
     "
     |> db.execute(pool, query_input, user_decoder.new()),
   )

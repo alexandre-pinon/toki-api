@@ -1,6 +1,10 @@
 import gleam/option.{type Option}
 import valid.{type ValidatorResult}
 
+pub type LoginRequest {
+  LoginRequest(email: String, password: String)
+}
+
 pub type RegisterInput {
   GoogleRegisterInput(email: String, name: String, google_id: Option(String))
   PasswordRegisterInput(email: String, name: String, password: String)
