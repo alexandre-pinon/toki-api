@@ -12,6 +12,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
     ["auth", "register"] -> handle_register(req, ctx)
     ["auth", "login"] -> handle_login(req, ctx)
+    ["auth", "logout"] -> handle_logout(req, ctx)
 
     ["users"] -> handle_users(req, ctx)
     ["users", id] -> handle_user(req, ctx, id)
@@ -30,6 +31,13 @@ fn handle_register(req: Request, ctx: Context) -> Response {
 fn handle_login(req: Request, ctx: Context) -> Response {
   case req.method {
     Post -> auth_controller.login(req, ctx)
+    _ -> wisp.method_not_allowed([Post])
+  }
+}
+
+fn handle_logout(req: Request, ctx: Context) -> Response {
+  case req.method {
+    Post -> auth_controller.logout(req, ctx)
     _ -> wisp.method_not_allowed([Post])
   }
 }

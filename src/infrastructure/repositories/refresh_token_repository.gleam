@@ -72,3 +72,20 @@ pub fn replace(
   |> db.execute(pool, query_input, dynamic.dynamic)
   |> result.replace(Nil)
 }
+
+pub fn revoke_all_active(
+  user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Nil, DbError) {
+  let user_id = pgo.text(uuid.to_string(user_id))
+
+  "
+    UPDATE refresh_tokens
+    SET revoked_at = NOW()::timestamptz(0),
+        updated_at = NOW()
+    WHERE user_id = $1
+    AND revoked_at IS NULL
+  "
+  |> db.execute(pool, [user_id], dynamic.dynamic)
+  |> result.replace(Nil)
+}
