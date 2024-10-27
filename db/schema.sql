@@ -104,7 +104,7 @@ ALTER TABLE ONLY public.users
 --
 
 ALTER TABLE ONLY public.refresh_tokens
-    ADD CONSTRAINT refresh_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT refresh_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -120,4 +120,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241020174630'),
     ('20241024184328'),
     ('20241025064421'),
-    ('20241027075135');
+    ('20241027075135'),
+    ('20241027142537');
