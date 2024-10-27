@@ -39,7 +39,9 @@ CREATE TABLE public.refresh_tokens (
     expires_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone,
-    revoked_at timestamp with time zone
+    revoked_at timestamp with time zone,
+    replaced_at timestamp with time zone,
+    replaced_by uuid
 );
 
 
@@ -100,6 +102,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: refresh_tokens refresh_tokens_replaced_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.refresh_tokens
+    ADD CONSTRAINT refresh_tokens_replaced_by_fkey FOREIGN KEY (replaced_by) REFERENCES public.refresh_tokens(id) ON DELETE SET NULL;
+
+
+--
 -- Name: refresh_tokens refresh_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -121,4 +131,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241024184328'),
     ('20241025064421'),
     ('20241027075135'),
-    ('20241027142537');
+    ('20241027142537'),
+    ('20241027143255');

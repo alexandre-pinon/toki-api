@@ -97,6 +97,8 @@ fn generate_refresh_token(user: User, ctx: Context) -> RefreshToken {
     token: token,
     expires_at: exp,
     revoked_at: None,
+    replaced_at: None,
+    replaced_by: None,
   )
 }
 

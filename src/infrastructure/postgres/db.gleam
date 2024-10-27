@@ -19,6 +19,7 @@ pub fn connect(db_config: DbConfig) -> pgo.Connection {
       password: Some(db_config.password),
       pool_size: db_config.pool_size,
       trace: True,
+      rows_as_map: True,
     ),
   )
 }

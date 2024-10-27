@@ -14,9 +14,9 @@ pub fn create(
 
   use query_result <- result.try(
     "
-      INSERT INTO refresh_tokens (id, user_id, token, expires_at, revoked_at, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, DEFAULT, NOW())
-      RETURNING id, user_id, token, expires_at, revoked_at
+      INSERT INTO refresh_tokens (id, user_id, token, expires_at, revoked_at, replaced_at, replaced_by, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, DEFAULT, NOW())
+      RETURNING id, user_id, token, expires_at, revoked_at, replaced_at, replaced_by
     "
     |> db.execute(pool, query_input, refresh_token_decoder.new()),
   )

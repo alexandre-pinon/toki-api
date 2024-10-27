@@ -9,5 +9,7 @@ pub type RefreshToken {
     token: String,
     expires_at: Time,
     revoked_at: Option(Time),
+    replaced_at: Option(Time),
+    replaced_by: Option(Uuid),
   )
 }
