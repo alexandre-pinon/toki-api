@@ -65,10 +65,10 @@ pub fn create(user: User, on pool: pgo.Connection) -> Result(User, DbError) {
 
   use query_result <- result.try(
     "
-        INSERT INTO users (id, email, name, google_id, password_hash, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, DEFAULT, NOW())
-        RETURNING id, email, name, google_id, password_hash
-      "
+      INSERT INTO users (id, email, name, google_id, password_hash, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, DEFAULT, NOW())
+      RETURNING id, email, name, google_id, password_hash
+    "
     |> db.execute(pool, query_input, user_decoder.new()),
   )
 

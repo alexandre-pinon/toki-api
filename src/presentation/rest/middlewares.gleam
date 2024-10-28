@@ -1,9 +1,11 @@
 import application/context.{type AuthContext, type Context}
+import birl
 import gjwt
-import gjwt/claim
+import gjwt/claim.{type Claims}
 import gjwt/key.{type Key}
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/order
 import gleam/pair
 import gleam/result
 import gleam/string
@@ -54,13 +56,26 @@ fn parse_auth_context(
 ) -> Response {
   let parsed_result =
     gjwt.from_jwt(jwt, key)
-    |> result.then(fn(verified_jwt) {
-      claim.get_subject({ verified_jwt.1 }.claims) |> result.replace_error(Nil)
+    |> result.map(fn(verified_jwt) { { verified_jwt.1 }.claims })
+    |> result.then(check_token_is_not_expired)
+    |> result.then(fn(claims) {
+      claim.get_subject(claims) |> result.replace_error(Nil)
     })
     |> result.then(uuid.from_string)
 
   case parsed_result {
     Ok(user_id) -> next(context.AuthContext(user_id, ctx))
     Error(_) -> wisp.response(401)
+  }
+}
+
+fn check_token_is_not_expired(claims: Claims) -> Result(Claims, Nil) {
+  use exp <- result.try(
+    claim.get_expiration_time(claims) |> result.replace_error(Nil),
+  )
+
+  case birl.compare(exp, birl.now()) {
+    order.Gt -> Ok(claims)
+    _ -> Error(Nil)
   }
 }
