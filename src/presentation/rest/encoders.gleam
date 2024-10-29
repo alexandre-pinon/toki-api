@@ -10,3 +10,10 @@ pub fn encode_user(user: User) -> Json {
     #("name", json.string(user.name)),
   ])
 }
+
+pub fn encode_auth_tokens(access_token: String, refresh_token: String) -> Json {
+  json.object([
+    #("access_token", json.string(access_token)),
+    #("refresh_token", json.string(refresh_token)),
+  ])
+}

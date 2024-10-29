@@ -13,6 +13,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["auth", "register"] -> handle_register(req, ctx)
     ["auth", "login"] -> handle_login(req, ctx)
     ["auth", "logout"] -> handle_logout(req, ctx)
+    ["auth", "google"] -> handle_google_auth(req, ctx)
 
     ["users"] -> handle_users(req, ctx)
     ["users", id] -> handle_user(req, ctx, id)
@@ -38,6 +39,13 @@ fn handle_login(req: Request, ctx: Context) -> Response {
 fn handle_logout(req: Request, ctx: Context) -> Response {
   case req.method {
     Post -> auth_controller.logout(req, ctx)
+    _ -> wisp.method_not_allowed([Post])
+  }
+}
+
+fn handle_google_auth(req: Request, ctx: Context) -> Response {
+  case req.method {
+    Post -> auth_controller.google_login(req, ctx)
     _ -> wisp.method_not_allowed([Post])
   }
 }

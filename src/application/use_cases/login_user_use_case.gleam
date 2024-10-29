@@ -1,5 +1,14 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type LoginRequest}
+import application/dto/auth_dto.{
+  type LoginRequest, GoogleLoginRequest, PasswordLoginRequest,
+}
+import application/dto/user_dto.{GoogleRegisterRequest, UserUpdateRequest}
+import application/use_cases/register_user_use_case.{
+  type RegisterUserUseCaseErrors,
+}
+import application/use_cases/update_user_use_case.{
+  type UpdateUserUseCaseErrors, UpdateUserUseCasePort,
+}
 import beecrypt
 import birl
 import birl/duration
@@ -10,11 +19,10 @@ import gjwt
 import gjwt/claim
 import gjwt/key
 import gleam/bit_array
-import gleam/bool
 import gleam/crypto
 import gleam/dynamic
 import gleam/list
-import gleam/option.{None, Some}
+import gleam/option.{type Option, None, Some}
 import gleam/pgo
 import gleam/result
 import gleam/string
@@ -34,30 +42,78 @@ pub type LoginUserUseCaseResult {
 pub type LoginUserUseCaseErrors {
   QueryFailed(DbError)
   InvalidCredentials
+  GoogleRegisterFailed(RegisterUserUseCaseErrors)
+  GoogleUpdateUserFailed(UpdateUserUseCaseErrors)
 }
 
 pub fn execute(
   port: LoginUserUseCasePort,
   ctx: Context,
 ) -> Result(LoginUserUseCaseResult, LoginUserUseCaseErrors) {
-  let maybe_user = user_repository.find_by_email(port.email, ctx.pool)
+  case port {
+    PasswordLoginRequest(email, password) ->
+      login_user_with_password(email, password, ctx)
+    GoogleLoginRequest(email, name, google_id) ->
+      login_user_with_google(email, name, google_id, ctx)
+  }
+}
 
-  case maybe_user {
-    Ok(Some(user)) -> {
-      use are_credentials_valid <- result.try(validate_user_credentials(
-        user,
-        port.password,
-      ))
+fn login_user_with_password(
+  email: String,
+  password: String,
+  ctx: Context,
+) -> Result(LoginUserUseCaseResult, LoginUserUseCaseErrors) {
+  let maybe_user = user_repository.find_by_email(email, ctx.pool)
 
-      bool.lazy_guard(
-        are_credentials_valid,
-        fn() { generate_user_tokens(user, ctx) },
-        fn() { Error(InvalidCredentials) },
-      )
-    }
+  use user <- result.try(case maybe_user {
+    Ok(Some(user)) -> Ok(user)
     Ok(None) -> Error(InvalidCredentials)
     Error(db_error) -> Error(QueryFailed(db_error))
+  })
+
+  use are_credentials_valid <- result.try(validate_user_credentials(
+    user,
+    password,
+  ))
+
+  case are_credentials_valid {
+    True -> generate_user_tokens(user, ctx)
+    False -> Error(InvalidCredentials)
   }
+}
+
+fn login_user_with_google(
+  email: String,
+  maybe_name: Option(String),
+  google_id: String,
+  ctx: Context,
+) -> Result(LoginUserUseCaseResult, LoginUserUseCaseErrors) {
+  let maybe_user = user_repository.find_by_email(email, ctx.pool)
+
+  use user <- result.try(case maybe_user {
+    Ok(Some(user)) ->
+      update_user_use_case.execute(
+        UpdateUserUseCasePort(
+          user.id,
+          UserUpdateRequest(Some(email), maybe_name, Some(google_id)),
+        ),
+        ctx,
+      )
+      |> result.map_error(GoogleUpdateUserFailed)
+    Ok(None) ->
+      register_user_use_case.execute(
+        GoogleRegisterRequest(
+          email,
+          option.unwrap(maybe_name, email),
+          google_id,
+        ),
+        ctx,
+      )
+      |> result.map_error(GoogleRegisterFailed)
+    Error(db_error) -> Error(QueryFailed(db_error))
+  })
+
+  generate_user_tokens(user, ctx)
 }
 
 fn validate_user_credentials(

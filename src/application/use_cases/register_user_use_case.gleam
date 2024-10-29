@@ -47,7 +47,7 @@ pub fn execute(
         id: uuid.v4(),
         email: email,
         name: name,
-        google_id: google_id,
+        google_id: Some(google_id),
         password_hash: None,
       )
   }

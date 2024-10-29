@@ -1,7 +1,5 @@
 import application/context.{type Context}
-import application/dto/user_dto.{
-  type RegisterRequest, type UserUpdateRequest, GoogleRegisterRequest,
-}
+import application/dto/user_dto.{type UserUpdateRequest}
 import application/use_cases/register_user_use_case
 import application/use_cases/update_user_use_case.{UpdateUserUseCasePort}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
@@ -9,6 +7,7 @@ import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
 import infrastructure/repositories/user_repository
+import presentation/rest/decoders
 import presentation/rest/encoders
 import presentation/rest/middlewares
 import wisp.{type Request, type Response}
@@ -45,7 +44,7 @@ pub fn show(ctx: Context, id: String) -> Response {
 pub fn create(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
 
-  case decode_google_register_request(json) {
+  case decoders.decode_google_register_request(json) {
     Ok(decoded) -> {
       case register_user_use_case.execute(decoded, ctx) {
         Ok(user) ->
@@ -111,28 +110,14 @@ pub fn delete(ctx: Context, id: String) -> Response {
   }
 }
 
-fn decode_google_register_request(
-  json: Dynamic,
-) -> Result(RegisterRequest, DecodeErrors) {
-  let decode =
-    dynamic.decode3(
-      GoogleRegisterRequest,
-      dynamic.field("email", dynamic.string),
-      dynamic.field("name", dynamic.string),
-      dynamic.optional_field("google_id", dynamic.string),
-    )
-  decode(json)
-}
-
 fn decode_user_update_request(
   json: Dynamic,
 ) -> Result(UserUpdateRequest, DecodeErrors) {
-  let decode =
-    dynamic.decode3(
-      user_dto.UserUpdateRequest,
-      dynamic.optional_field("email", dynamic.string),
-      dynamic.optional_field("name", dynamic.string),
-      dynamic.optional_field("google_id", dynamic.string),
-    )
-  decode(json)
+  json
+  |> dynamic.decode3(
+    user_dto.UserUpdateRequest,
+    dynamic.optional_field("email", dynamic.string),
+    dynamic.optional_field("name", dynamic.string),
+    dynamic.optional_field("google_id", dynamic.string),
+  )
 }

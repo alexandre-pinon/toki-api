@@ -4,17 +4,13 @@ import gleam/string
 import non_empty_list
 import valid.{type ValidatorResult}
 
-pub type LoginRequest {
-  LoginRequest(email: String, password: String)
-}
-
 pub type RegisterInput {
-  GoogleRegisterInput(email: String, name: String, google_id: Option(String))
+  GoogleRegisterInput(email: String, name: String, google_id: String)
   PasswordRegisterInput(email: String, name: String, password: String)
 }
 
 pub type RegisterRequest {
-  GoogleRegisterRequest(email: String, name: String, google_id: Option(String))
+  GoogleRegisterRequest(email: String, name: String, google_id: String)
   PasswordRegisterRequest(email: String, name: String, password: String)
 }
 

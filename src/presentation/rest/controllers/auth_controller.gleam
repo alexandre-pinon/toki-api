@@ -1,11 +1,16 @@
 import application/context.{type Context, AuthContext}
-import application/dto/user_dto.{
-  type LoginRequest, type RegisterRequest, PasswordRegisterRequest,
+import application/dto/auth_dto.{
+  type LoginRequest, GoogleLoginRequest, PasswordLoginRequest,
 }
+import application/dto/user_dto.{type RegisterRequest, PasswordRegisterRequest}
 import application/use_cases/login_user_use_case.{InvalidCredentials}
 import application/use_cases/register_user_use_case
+import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
+import gleam/io
 import gleam/json
+import gleam/list
+import gleam/result
 import gleam/string
 import infrastructure/repositories/refresh_token_repository
 import presentation/rest/encoders
@@ -47,7 +52,7 @@ pub fn login(req: Request, ctx: Context) -> Response {
     Ok(decoded) -> {
       case login_user_use_case.execute(decoded, ctx) {
         Ok(result) ->
-          json.object([#("access_token", json.string(result.access_token))])
+          encoders.encode_auth_tokens(result.access_token, result.refresh_token)
           |> json.to_string_builder
           |> wisp.json_response(200)
         Error(InvalidCredentials) -> wisp.response(401)
@@ -76,25 +81,84 @@ pub fn logout(req: Request, ctx: Context) -> Response {
   }
 }
 
+pub fn google_login(req: Request, ctx: Context) -> Response {
+  use json <- wisp.require_json(req)
+
+  case decode_google_id_token(json) {
+    Ok(decoded) ->
+      case login_user_use_case.execute(decoded, ctx) {
+        Ok(result) ->
+          encoders.encode_auth_tokens(result.access_token, result.refresh_token)
+          |> json.to_string_builder
+          |> wisp.json_response(200)
+        Error(error) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.internal_server_error()
+        }
+      }
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.response(401)
+    }
+  }
+}
+
 fn decode_password_register_request(
   json: Dynamic,
 ) -> Result(RegisterRequest, DecodeErrors) {
-  let decode =
-    dynamic.decode3(
-      PasswordRegisterRequest,
-      dynamic.field("email", dynamic.string),
-      dynamic.field("name", dynamic.string),
-      dynamic.field("password", dynamic.string),
-    )
-  decode(json)
+  json
+  |> dynamic.decode3(
+    PasswordRegisterRequest,
+    dynamic.field("email", dynamic.string),
+    dynamic.field("name", dynamic.string),
+    dynamic.field("password", dynamic.string),
+  )
 }
 
 fn decode_login_request(json: Dynamic) -> Result(LoginRequest, DecodeErrors) {
-  let decode =
-    dynamic.decode2(
-      user_dto.LoginRequest,
-      dynamic.field("email", dynamic.string),
-      dynamic.field("password", dynamic.string),
+  json
+  |> dynamic.decode2(
+    PasswordLoginRequest,
+    dynamic.field("email", dynamic.string),
+    dynamic.field("password", dynamic.string),
+  )
+}
+
+fn decode_google_id_token(
+  json: Dynamic,
+) -> Result(LoginRequest, json.DecodeError) {
+  use id_token_request <- result.try(
+    json
+    |> dynamic.decode1(
+      IdTokenRequest,
+      dynamic.field("id_token", dynamic.string),
     )
-  decode(json)
+    |> result.map_error(json.UnexpectedFormat),
+  )
+  use jwt_payload <- result.try(
+    get_jwt_payload(id_token_request.id_token)
+    |> result.replace_error(json.UnexpectedByte(id_token_request.id_token)),
+  )
+
+  // TODO: validate token with jwk, iss, aud, exp
+  // https://developers.google.com/identity/openid-connect/openid-connect#validatinganidtoken
+  jwt_payload
+  |> json.decode_bits(dynamic.decode3(
+    GoogleLoginRequest,
+    dynamic.field("email", dynamic.string),
+    dynamic.optional_field("name", dynamic.string),
+    dynamic.field("sub", dynamic.string),
+  ))
+}
+
+fn get_jwt_payload(jwt: String) -> Result(BitArray, Nil) {
+  jwt
+  |> string.split(".")
+  |> list.take(2)
+  |> list.last
+  |> result.then(bit_array.base64_decode)
+}
+
+type IdTokenRequest {
+  IdTokenRequest(id_token: String)
 }
