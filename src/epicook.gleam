@@ -4,7 +4,6 @@ import dot_env
 import env
 import gleam/erlang/process
 import gleam/int
-import gleam/io
 import gleam/result
 import gleam/string
 import infrastructure/postgres/db
@@ -21,10 +20,10 @@ pub fn main() -> Nil {
 
   case start_server() {
     Ok(Nil) -> {
-      io.println("Server started successfully")
+      wisp.log_info("Server started successfully")
     }
     Error(error) -> {
-      io.println_error("Failed to start server: " <> string.inspect(error))
+      wisp.log_critical("Failed to start server: " <> string.inspect(error))
     }
   }
 
@@ -39,7 +38,7 @@ type InitError {
 fn start_server() -> Result(Nil, InitError) {
   use env <- result.try(env.load() |> result.map_error(EnvError))
 
-  io.println("Starting Epicook API on port: " <> int.to_string(env.port))
+  wisp.log_info("Starting Epicook API on port: " <> int.to_string(env.port))
 
   let pool = db.connect(env.db_config)
   let ctx =
