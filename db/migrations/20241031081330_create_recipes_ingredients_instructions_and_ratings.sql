@@ -102,6 +102,10 @@ CREATE TABLE recipes (
   source_url TEXT,
   image_url TEXT,
   cuisine_type cuisine_type,
+  rating INTEGER CHECK (
+    rating BETWEEN 1
+    AND 5
+  ),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ
 );
@@ -125,22 +129,7 @@ CREATE TABLE instructions (
   updated_at TIMESTAMPTZ
 );
 
-CREATE TABLE recipe_ratings (
-  id UUID PRIMARY KEY,
-  recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id),
-  rating INTEGER NOT NULL CHECK (
-    rating BETWEEN 1
-    AND 5
-  ),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ,
-  UNIQUE(recipe_id, user_id) -- Ensure one rating per user per recipe
-);
-
 -- migrate:down
-DROP TABLE recipe_ratings;
-
 DROP TABLE instructions;
 
 DROP TABLE ingredients;

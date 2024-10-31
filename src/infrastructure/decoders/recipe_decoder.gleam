@@ -19,11 +19,12 @@ pub type RecipeRow {
     source_url: Option(String),
     image_url: Option(String),
     cuisine_type: Option(String),
+    rating: Option(Int),
   )
 }
 
 pub fn new() -> Decoder(RecipeRow) {
-  dynamic.decode9(
+  common_decoder.decode10(
     RecipeRow,
     dynamic.field("id", dynamic.bit_array),
     dynamic.field("user_id", dynamic.bit_array),
@@ -34,6 +35,7 @@ pub fn new() -> Decoder(RecipeRow) {
     dynamic.field("source_url", dynamic.optional(dynamic.string)),
     dynamic.field("image_url", dynamic.optional(dynamic.string)),
     dynamic.field("cuisine_type", dynamic.optional(dynamic.string)),
+    dynamic.field("rating", dynamic.optional(dynamic.int)),
   )
 }
 
@@ -51,6 +53,7 @@ pub fn from_domain_to_db(recipe: Recipe) -> List(pgo.Value) {
       pgo.text,
       recipe.cuisine_type |> option.map(cuisine_type.to_string),
     ),
+    pgo.nullable(pgo.int, recipe.rating),
   ]
 }
 
@@ -65,6 +68,7 @@ pub fn from_db_to_domain(recipe_row: RecipeRow) -> Result(Recipe, DbError) {
     source_url,
     image_url,
     cuisine_type,
+    rating,
   ) = recipe_row
 
   use id <- result.try(common_decoder.from_db_uuid_to_domain_uuid(id))
@@ -81,5 +85,6 @@ pub fn from_db_to_domain(recipe_row: RecipeRow) -> Result(Recipe, DbError) {
     source_url,
     image_url,
     cuisine_type,
+    rating,
   ))
 }

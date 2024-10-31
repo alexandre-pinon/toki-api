@@ -152,21 +152,6 @@ CREATE TABLE public.instructions (
 
 
 --
--- Name: recipe_ratings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.recipe_ratings (
-    id uuid NOT NULL,
-    recipe_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    rating integer NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone,
-    CONSTRAINT recipe_ratings_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
-);
-
-
---
 -- Name: recipes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -180,8 +165,10 @@ CREATE TABLE public.recipes (
     source_url text,
     image_url text,
     cuisine_type public.cuisine_type,
+    rating integer,
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    CONSTRAINT recipes_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
 );
 
 
@@ -243,22 +230,6 @@ ALTER TABLE ONLY public.instructions
 
 
 --
--- Name: recipe_ratings recipe_ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.recipe_ratings
-    ADD CONSTRAINT recipe_ratings_pkey PRIMARY KEY (id);
-
-
---
--- Name: recipe_ratings recipe_ratings_recipe_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.recipe_ratings
-    ADD CONSTRAINT recipe_ratings_recipe_id_user_id_key UNIQUE (recipe_id, user_id);
-
-
---
 -- Name: recipes recipes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -312,22 +283,6 @@ ALTER TABLE ONLY public.ingredients
 
 ALTER TABLE ONLY public.instructions
     ADD CONSTRAINT instructions_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
-
-
---
--- Name: recipe_ratings recipe_ratings_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.recipe_ratings
-    ADD CONSTRAINT recipe_ratings_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
-
-
---
--- Name: recipe_ratings recipe_ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.recipe_ratings
-    ADD CONSTRAINT recipe_ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

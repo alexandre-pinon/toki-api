@@ -1,14 +1,22 @@
+import domain/entities/ingredient.{type Ingredient}
+import domain/entities/instruction.{type Instruction}
 import domain/entities/recipe.{type Recipe}
+import domain/entities/recipe_details.{type RecipeDetails}
 import domain/entities/user.{type User}
 import domain/value_objects/cuisine_type
+import domain/value_objects/unit_type
 import gleam/json.{type Json}
 import gleam/option
 import gleam/string
-import youid/uuid
+import youid/uuid.{type Uuid}
+
+fn encode_uuid(id: Uuid) -> Json {
+  json.string(uuid.to_string(id) |> string.lowercase)
+}
 
 pub fn encode_user(user: User) -> Json {
   json.object([
-    #("id", json.string(uuid.to_string(user.id) |> string.lowercase)),
+    #("id", encode_uuid(user.id)),
     #("email", json.string(user.email)),
     #("name", json.string(user.name)),
   ])
@@ -23,11 +31,8 @@ pub fn encode_auth_tokens(access_token: String, refresh_token: String) -> Json {
 
 pub fn encode_recipe(recipe: Recipe) -> Json {
   json.object([
-    #("id", json.string(uuid.to_string(recipe.id) |> string.lowercase)),
-    #(
-      "user_id",
-      json.string(uuid.to_string(recipe.user_id) |> string.lowercase),
-    ),
+    #("id", encode_uuid(recipe.id)),
+    #("user_id", encode_uuid(recipe.user_id)),
     #("title", json.string(recipe.title)),
     #("prep_time", json.nullable(recipe.prep_time, json.int)),
     #("cook_time", json.nullable(recipe.cook_time, json.int)),
@@ -40,6 +45,43 @@ pub fn encode_recipe(recipe: Recipe) -> Json {
         recipe.cuisine_type |> option.map(cuisine_type.to_string),
         json.string,
       ),
+    ),
+    #("rating", json.nullable(recipe.rating, json.int)),
+  ])
+}
+
+pub fn encode_ingredient(ingredient: Ingredient) -> Json {
+  json.object([
+    #("id", encode_uuid(ingredient.id)),
+    #("recipe_id", encode_uuid(ingredient.recipe_id)),
+    #("name", json.string(ingredient.name)),
+    #("quantity", json.nullable(ingredient.quantity, json.float)),
+    #(
+      "unit",
+      json.nullable(
+        ingredient.unit |> option.map(unit_type.to_string),
+        json.string,
+      ),
+    ),
+  ])
+}
+
+pub fn encode_instruction(instruction: Instruction) -> Json {
+  json.object([
+    #("id", encode_uuid(instruction.id)),
+    #("recipe_id", encode_uuid(instruction.recipe_id)),
+    #("step_number", json.int(instruction.step_number)),
+    #("instruction", json.string(instruction.instruction)),
+  ])
+}
+
+pub fn encode_recipe_details(recipe_details: RecipeDetails) -> Json {
+  json.object([
+    #("recipe", encode_recipe(recipe_details.recipe)),
+    #("ingredients", json.array(recipe_details.ingredients, encode_ingredient)),
+    #(
+      "instructions",
+      json.array(recipe_details.instructions, encode_instruction),
     ),
   ])
 }

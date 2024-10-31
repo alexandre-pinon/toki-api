@@ -13,5 +13,6 @@ pub type Recipe {
     source_url: Option(String),
     image_url: Option(String),
     cuisine_type: Option(CuisineType),
+    rating: Option(Int),
   )
 }
