@@ -72,7 +72,7 @@ fn handle_user(req: Request, ctx: Context, id: String) -> Response {
 
 fn handle_recipes(req: Request, ctx: Context) -> Response {
   case req.method {
-    Get -> recipe_controller.list(ctx)
+    Get -> recipe_controller.list(req, ctx)
     _ -> wisp.method_not_allowed([Get])
   }
 }

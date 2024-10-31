@@ -1,12 +1,15 @@
-import application/context.{type Context}
+import application/context.{type Context, AuthContext}
 import gleam/json
 import gleam/string
 import infrastructure/repositories/recipe_repository
 import presentation/rest/encoders
-import wisp.{type Response}
+import presentation/rest/middlewares
+import wisp.{type Request, type Response}
 
-pub fn list(ctx: Context) -> Response {
-  case recipe_repository.find_all(ctx.pool) {
+pub fn list(req: Request, ctx: Context) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+
+  case recipe_repository.find_all(user_id, ctx.pool) {
     Ok(recipes) ->
       json.array(recipes, encoders.encode_recipe)
       |> json.to_string_builder
