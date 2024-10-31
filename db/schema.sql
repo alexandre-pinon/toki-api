@@ -24,9 +24,166 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
+--
+-- Name: cuisine_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.cuisine_type AS ENUM (
+    'chinese',
+    'japanese',
+    'korean',
+    'vietnamese',
+    'thai',
+    'indian',
+    'indonesian',
+    'malaysian',
+    'filipino',
+    'singaporean',
+    'taiwanese',
+    'tibetan',
+    'nepalese',
+    'italian',
+    'french',
+    'spanish',
+    'greek',
+    'german',
+    'british',
+    'irish',
+    'portuguese',
+    'hungarian',
+    'polish',
+    'russian',
+    'swedish',
+    'norwegian',
+    'danish',
+    'dutch',
+    'belgian',
+    'swiss',
+    'austrian',
+    'turkish',
+    'lebanese',
+    'iranian',
+    'israeli',
+    'moroccan',
+    'egyptian',
+    'syrian',
+    'iraqi',
+    'saudi',
+    'american',
+    'mexican',
+    'brazilian',
+    'peruvian',
+    'argentinian',
+    'colombian',
+    'venezuelan',
+    'caribbean',
+    'cuban',
+    'cajun',
+    'creole',
+    'canadian',
+    'ethiopian',
+    'nigerian',
+    'south_african',
+    'kenyan',
+    'ghanaian',
+    'senegalese',
+    'tanzanian',
+    'other'
+);
+
+
+--
+-- Name: unit_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.unit_type AS ENUM (
+    'ml',
+    'cl',
+    'dl',
+    'l',
+    'g',
+    'kg',
+    'tsp',
+    'tbsp',
+    'cup',
+    'piece',
+    'pinch',
+    'bunch',
+    'clove',
+    'can',
+    'package',
+    'slice',
+    'to_taste',
+    'unit'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: ingredients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ingredients (
+    id uuid NOT NULL,
+    recipe_id uuid NOT NULL,
+    name text NOT NULL,
+    quantity numeric(10,2),
+    unit public.unit_type,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: instructions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instructions (
+    id uuid NOT NULL,
+    recipe_id uuid NOT NULL,
+    step_number integer NOT NULL,
+    instruction text NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: recipe_ratings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.recipe_ratings (
+    id uuid NOT NULL,
+    recipe_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    rating integer NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    CONSTRAINT recipe_ratings_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+--
+-- Name: recipes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.recipes (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    title text NOT NULL,
+    prep_time integer,
+    cook_time integer,
+    servings integer,
+    source_url text,
+    image_url text,
+    cuisine_type public.cuisine_type,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
 
 --
 -- Name: refresh_tokens; Type: TABLE; Schema: public; Owner: -
@@ -70,6 +227,46 @@ CREATE TABLE public.users (
 
 
 --
+-- Name: ingredients ingredients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ingredients
+    ADD CONSTRAINT ingredients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: instructions instructions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instructions
+    ADD CONSTRAINT instructions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: recipe_ratings recipe_ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipe_ratings
+    ADD CONSTRAINT recipe_ratings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: recipe_ratings recipe_ratings_recipe_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipe_ratings
+    ADD CONSTRAINT recipe_ratings_recipe_id_user_id_key UNIQUE (recipe_id, user_id);
+
+
+--
+-- Name: recipes recipes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipes
+    ADD CONSTRAINT recipes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: refresh_tokens refresh_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -99,6 +296,46 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ingredients ingredients_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ingredients
+    ADD CONSTRAINT ingredients_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: instructions instructions_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instructions
+    ADD CONSTRAINT instructions_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: recipe_ratings recipe_ratings_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipe_ratings
+    ADD CONSTRAINT recipe_ratings_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: recipe_ratings recipe_ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipe_ratings
+    ADD CONSTRAINT recipe_ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: recipes recipes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recipes
+    ADD CONSTRAINT recipes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -132,4 +369,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241025064421'),
     ('20241027075135'),
     ('20241027142537'),
-    ('20241027143255');
+    ('20241027143255'),
+    ('20241031081330');
