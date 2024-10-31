@@ -1,8 +1,9 @@
 import application/context.{type Context}
 import application/dto/auth_dto.{
-  type LoginRequest, GoogleLoginRequest, PasswordLoginRequest,
+  type LoginRequest, GoogleLoginRequest, GoogleRegisterRequest,
+  PasswordLoginRequest,
 }
-import application/dto/user_dto.{GoogleRegisterRequest, UserUpdateRequest}
+import application/dto/user_dto.{UserUpdateRequest}
 import application/use_cases/register_user_use_case.{
   type RegisterUserUseCaseErrors,
 }

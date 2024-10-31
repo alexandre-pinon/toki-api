@@ -1,13 +1,12 @@
 import application/context.{type Context, AuthContext}
 import application/dto/auth_dto.{
-  type LoginRequest, GoogleLoginRequest, PasswordLoginRequest,
+  type LoginRequest, type RegisterRequest, GoogleLoginRequest,
+  PasswordLoginRequest, PasswordRegisterRequest,
 }
-import application/dto/user_dto.{type RegisterRequest, PasswordRegisterRequest}
 import application/use_cases/login_user_use_case.{InvalidCredentials}
 import application/use_cases/register_user_use_case
 import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/result

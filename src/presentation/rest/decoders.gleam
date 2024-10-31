@@ -1,4 +1,4 @@
-import application/dto/user_dto.{type RegisterRequest, GoogleRegisterRequest}
+import application/dto/auth_dto.{type RegisterRequest, GoogleRegisterRequest}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 
 pub fn decode_google_register_request(

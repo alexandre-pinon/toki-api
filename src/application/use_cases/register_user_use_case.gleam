@@ -1,5 +1,5 @@
 import application/context.{type Context}
-import application/dto/user_dto.{
+import application/dto/auth_dto.{
   type RegisterInput, type RegisterRequest, GoogleRegisterInput,
   PasswordRegisterInput,
 }
@@ -63,6 +63,6 @@ pub fn execute(
 fn validate_input(
   port: RegisterUserUseCasePort,
 ) -> Result(RegisterInput, RegisterUserUseCaseErrors) {
-  user_dto.validate_register_request(port)
+  auth_dto.validate_register_request(port)
   |> result.map_error(ValidationFailed)
 }
