@@ -6,7 +6,7 @@ import gleam/pgo
 import gleam/result
 import infrastructure/decoders/recipe_decoder
 import infrastructure/decoders/recipe_details_decoder
-import infrastructure/errors.{type DbError}
+import infrastructure/errors.{type DbError, EntityNotFound}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
@@ -116,4 +116,33 @@ pub fn find_by_id(
     Some(Ok(recipe_details)) -> Ok(Some(recipe_details))
     None -> Ok(None)
   }
+}
+
+pub fn upsert(
+  recipe: Recipe,
+  on pool: pgo.Connection,
+) -> Result(Recipe, DbError) {
+  let query_input = recipe_decoder.from_domain_to_db(recipe)
+
+  use query_result <- result.try(
+    "
+      INSERT INTO recipes (id, user_id, title, prep_time, cook_time, servings, source_url, image_url, cuisine_type, rating, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, DEFAULT, NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        prep_time = EXCLUDED.prep_time,
+        cook_time = EXCLUDED.cook_time,
+        servings = EXCLUDED.servings,
+        source_url = EXCLUDED.source_url,
+        image_url = EXCLUDED.image_url,
+        cuisine_type = EXCLUDED.cuisine_type,
+        updated_at = NOW()
+      RETURNING id, user_id, title, prep_time, cook_time, servings, source_url, image_url, cuisine_type, rating
+    "
+    |> db.execute(pool, query_input, recipe_decoder.new()),
+  )
+
+  list.first(query_result.rows)
+  |> result.replace_error(EntityNotFound)
+  |> result.then(recipe_decoder.from_db_to_domain)
 }

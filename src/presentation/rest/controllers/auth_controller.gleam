@@ -102,6 +102,11 @@ pub fn google_login(req: Request, ctx: Context) -> Response {
   }
 }
 
+//TODO: implement refresh token route !
+pub fn refresh_token(req: Request, ctx: Context) -> Response {
+  todo
+}
+
 fn decode_password_register_request(
   json: Dynamic,
 ) -> Result(RegisterRequest, DecodeErrors) {
