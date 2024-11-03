@@ -1,5 +1,6 @@
 import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
+import gleam/dynamic
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pgo
@@ -145,4 +146,19 @@ pub fn upsert(
   list.first(query_result.rows)
   |> result.replace_error(EntityNotFound)
   |> result.then(recipe_decoder.from_db_to_domain)
+}
+
+pub fn delete(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Bool, DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  "DELETE FROM recipes WHERE id = $1 AND user_id = $2"
+  |> db.execute(pool, query_input, dynamic.dynamic)
+  |> result.map(fn(returned) { returned.count > 0 })
 }

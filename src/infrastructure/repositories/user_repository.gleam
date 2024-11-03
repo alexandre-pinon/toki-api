@@ -1,5 +1,6 @@
 import application/dto/user_dto.{type UserUpdateInput}
 import domain/entities/user.{type User}
+import gleam/dynamic
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/pgo
@@ -111,6 +112,6 @@ pub fn delete(id: Uuid, on pool: pgo.Connection) -> Result(Bool, DbError) {
   let user_id = pgo.text(uuid.to_string(id))
 
   "DELETE FROM users WHERE id = $1"
-  |> db.execute(pool, [user_id], user_decoder.new())
+  |> db.execute(pool, [user_id], dynamic.dynamic)
   |> result.map(fn(returned) { returned.count > 0 })
 }

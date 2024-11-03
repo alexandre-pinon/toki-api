@@ -83,6 +83,7 @@ fn handle_recipe(req: Request, ctx: Context, id: String) -> Response {
   case req.method {
     Get -> recipe_controller.show(req, ctx, id)
     Put -> recipe_controller.update(req, ctx, id)
-    _ -> wisp.method_not_allowed([Get, Put])
+    Delete -> recipe_controller.delete(req, ctx, id)
+    _ -> wisp.method_not_allowed([Get, Put, Delete])
   }
 }

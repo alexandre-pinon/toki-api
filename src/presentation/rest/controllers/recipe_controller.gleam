@@ -113,6 +113,20 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   }
 }
 
+pub fn delete(req: Request, ctx: Context, id: String) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+  use recipe_id <- middlewares.require_uuid(id)
+
+  case recipe_repository.delete(recipe_id, user_id, ctx.pool) {
+    Ok(True) -> wisp.no_content()
+    Ok(False) -> wisp.not_found()
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
+    }
+  }
+}
+
 fn decode_recipe_details_upsert_request(
   json: Dynamic,
 ) -> Result(RecipeDetailsUpsertRequest, DecodeErrors) {
