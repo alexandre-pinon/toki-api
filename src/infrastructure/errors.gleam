@@ -6,5 +6,4 @@ pub type DbError {
   DecodingFailed(reason: String)
   JsonDecodingFailed(json.DecodeError)
   ExecutionFailed(pgo.QueryError)
-  TransactionFailed(pgo.TransactionError)
 }

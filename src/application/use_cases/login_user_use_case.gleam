@@ -42,6 +42,7 @@ pub type LoginUserUseCaseResult {
 
 pub type LoginUserUseCaseErrors {
   QueryFailed(DbError)
+  TransactionFailed(pgo.TransactionError)
   InvalidCredentials
   GoogleRegisterFailed(RegisterUserUseCaseErrors)
   GoogleUpdateUserFailed(UpdateUserUseCaseErrors)
@@ -136,8 +137,7 @@ fn generate_user_tokens(
       ctx.token_config,
       _,
     ))
-    |> result.map_error(errors.TransactionFailed)
-    |> result.map_error(QueryFailed),
+    |> result.map_error(TransactionFailed),
   )
 
   let access_token = generate_access_token(user, ctx)

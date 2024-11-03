@@ -1,7 +1,9 @@
 import application/dto/common_dto
+import domain/entities/ingredient.{type Ingredient}
 import domain/value_objects/unit_type.{type UnitType}
 import gleam/option.{type Option}
 import valid.{type ValidatorResult}
+import youid/uuid.{type Uuid}
 
 pub type IngredientCreateRequest {
   IngredientCreateRequest(
@@ -31,5 +33,18 @@ pub fn validate_ingredient_create_request(
   |> valid.check(
     input.unit,
     valid.if_some(fn(input) { Ok(unit_type.from_string(input)) }),
+  )
+}
+
+pub fn to_entity(
+  input: IngredientCreateInput,
+  for recipe_id: Uuid,
+) -> Ingredient {
+  ingredient.Ingredient(
+    id: uuid.v4(),
+    recipe_id: recipe_id,
+    name: input.name,
+    quantity: input.quantity,
+    unit: input.unit,
   )
 }

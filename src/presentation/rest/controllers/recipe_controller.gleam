@@ -3,12 +3,11 @@ import application/dto/ingredient_dto.{type IngredientCreateRequest}
 import application/dto/instruction_dto.{type InstructionCreateRequest}
 import application/dto/recipe_details_dto.{type RecipeDetailsCreateRequest}
 import application/dto/recipe_dto.{type RecipeCreateRequest}
-import application/use_cases/upsert_recipe_use_case
+import application/use_cases/create_recipe_use_case
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
-import infrastructure/decoders/common_decoder
 import infrastructure/repositories/recipe_repository
 import presentation/rest/encoders
 import presentation/rest/middlewares
@@ -52,11 +51,15 @@ pub fn create(req: Request, ctx: Context) -> Response {
 
   case decode_recipe_details_create_request(json) {
     Ok(decoded) -> {
-      case upsert_recipe_use_case.execute(decoded, auth_ctx) {
+      case create_recipe_use_case.execute(decoded, auth_ctx) {
         Ok(recipe_details) ->
           encoders.encode_recipe_details(recipe_details)
           |> json.to_string_builder
           |> wisp.json_response(201)
+        Error(create_recipe_use_case.ValidationFailed(error)) -> {
+          wisp.log_debug(string.inspect(error))
+          wisp.unprocessable_entity()
+        }
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()

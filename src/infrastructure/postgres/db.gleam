@@ -1,6 +1,8 @@
 import app_logger
 import env.{type DbConfig}
 import gleam/dynamic
+import gleam/int
+import gleam/list
 import gleam/option.{Some}
 import gleam/pgo
 import gleam/result
@@ -46,4 +48,22 @@ pub fn execute(
   |> pgo.execute(pool, arguments, decoder)
   |> result.map_error(app_logger.log_error)
   |> result.map_error(ExecutionFailed)
+}
+
+pub fn generate_values_clause(rows: List(a), params_per_row: Int) -> String {
+  list.range(0, list.length(rows) - 1)
+  |> list.map(generate_row_placeholders(_, params_per_row))
+  |> string.join(", ")
+}
+
+fn generate_row_placeholders(row_index: Int, params_per_row: Int) {
+  let start = row_index * params_per_row + 1
+
+  let all_values =
+    list.range(start, start + params_per_row - 1)
+    |> list.map(fn(i) { "$" <> int.to_string(i) })
+    |> list.append(["DEFAULT", "NOW()"])
+    |> string.join(", ")
+
+  "(" <> all_values <> ")"
 }
