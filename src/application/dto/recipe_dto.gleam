@@ -5,8 +5,8 @@ import gleam/option.{type Option}
 import valid.{type ValidatorResult}
 import youid/uuid.{type Uuid}
 
-pub type RecipeCreateRequest {
-  RecipeCreateRequest(
+pub type RecipeUpsertRequest {
+  RecipeUpsertRequest(
     title: String,
     prep_time: Option(Int),
     cook_time: Option(Int),
@@ -18,8 +18,8 @@ pub type RecipeCreateRequest {
   )
 }
 
-pub type RecipeCreateInput {
-  RecipeCreateInput(
+pub type RecipeUpsertInput {
+  RecipeUpsertInput(
     title: String,
     prep_time: Option(Int),
     cook_time: Option(Int),
@@ -31,10 +31,10 @@ pub type RecipeCreateInput {
   )
 }
 
-pub fn validate_recipe_create_request(
-  input: RecipeCreateRequest,
-) -> ValidatorResult(RecipeCreateInput, String) {
-  common_dto.build8(RecipeCreateInput)
+pub fn validate_recipe_upsert_request(
+  input: RecipeUpsertRequest,
+) -> ValidatorResult(RecipeUpsertInput, String) {
+  common_dto.build8(RecipeUpsertInput)
   |> valid.check(input.title, valid.string_is_not_empty("empty title"))
   |> valid.check(
     input.prep_time,
@@ -69,7 +69,7 @@ pub fn validate_recipe_create_request(
   )
 }
 
-pub fn to_entity(dto: RecipeCreateInput, user_id: Uuid) -> Recipe {
+pub fn to_entity(dto: RecipeUpsertInput, user_id: Uuid) -> Recipe {
   recipe.Recipe(
     id: uuid.v4(),
     user_id: user_id,

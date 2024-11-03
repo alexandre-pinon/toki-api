@@ -2,18 +2,18 @@ import domain/entities/instruction.{type Instruction}
 import valid.{type ValidatorResult}
 import youid/uuid.{type Uuid}
 
-pub type InstructionCreateRequest {
-  InstructionCreateRequest(step_number: Int, instruction: String)
+pub type InstructionUpsertRequest {
+  InstructionUpsertRequest(step_number: Int, instruction: String)
 }
 
-pub type InstructionCreateInput {
-  InstructionCreateInput(step_number: Int, instruction: String)
+pub type InstructionUpsertInput {
+  InstructionUpsertInput(step_number: Int, instruction: String)
 }
 
-pub fn validate_instruction_create_request(
-  input: InstructionCreateRequest,
-) -> ValidatorResult(InstructionCreateInput, String) {
-  valid.build2(InstructionCreateInput)
+pub fn validate_instruction_upsert_request(
+  input: InstructionUpsertRequest,
+) -> ValidatorResult(InstructionUpsertInput, String) {
+  valid.build2(InstructionUpsertInput)
   |> valid.check(
     input.step_number,
     valid.int_min(1, "step_number inferior to 1"),
@@ -25,7 +25,7 @@ pub fn validate_instruction_create_request(
 }
 
 pub fn to_entity(
-  input: InstructionCreateInput,
+  input: InstructionUpsertInput,
   for recipe_id: Uuid,
 ) -> Instruction {
   instruction.Instruction(

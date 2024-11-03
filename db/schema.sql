@@ -254,6 +254,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: instructions step_number_recipe_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instructions
+    ADD CONSTRAINT step_number_recipe_id UNIQUE (step_number, recipe_id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -325,4 +333,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241027075135'),
     ('20241027142537'),
     ('20241027143255'),
-    ('20241031081330');
+    ('20241031081330'),
+    ('20241103140034');

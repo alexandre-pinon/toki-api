@@ -20,8 +20,7 @@ pub fn bulk_upsert(
     |> string.append(db.generate_values_clause(instructions, 4))
     |> string.append(
       "
-        ON CONFLICT (id) DO UPDATE SET
-          step_number = EXCLUDED.step_number,
+        ON CONFLICT (step_number, recipe_id) DO UPDATE SET
           instruction = EXCLUDED.instruction,
           updated_at = NOW()
         RETURNING id, recipe_id, step_number, instruction

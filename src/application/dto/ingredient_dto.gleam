@@ -5,26 +5,29 @@ import gleam/option.{type Option}
 import valid.{type ValidatorResult}
 import youid/uuid.{type Uuid}
 
-pub type IngredientCreateRequest {
-  IngredientCreateRequest(
+pub type IngredientUpsertRequest {
+  IngredientUpsertRequest(
+    id: String,
     name: String,
     quantity: Option(Float),
     unit: Option(String),
   )
 }
 
-pub type IngredientCreateInput {
-  IngredientCreateInput(
+pub type IngredientUpsertInput {
+  IngredientUpsertInput(
+    id: Uuid,
     name: String,
     quantity: Option(Float),
     unit: Option(UnitType),
   )
 }
 
-pub fn validate_ingredient_create_request(
-  input: IngredientCreateRequest,
-) -> ValidatorResult(IngredientCreateInput, String) {
-  valid.build3(IngredientCreateInput)
+pub fn validate_ingredient_upsert_request(
+  input: IngredientUpsertRequest,
+) -> ValidatorResult(IngredientUpsertInput, String) {
+  valid.build4(IngredientUpsertInput)
+  |> valid.check(input.id, common_dto.string_is_uuid("invalid id"))
   |> valid.check(input.name, valid.string_is_not_empty("empty name"))
   |> valid.check(
     input.quantity,
@@ -37,11 +40,11 @@ pub fn validate_ingredient_create_request(
 }
 
 pub fn to_entity(
-  input: IngredientCreateInput,
+  input: IngredientUpsertInput,
   for recipe_id: Uuid,
 ) -> Ingredient {
   ingredient.Ingredient(
-    id: uuid.v4(),
+    id: input.id,
     recipe_id: recipe_id,
     name: input.name,
     quantity: input.quantity,

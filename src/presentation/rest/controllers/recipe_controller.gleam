@@ -1,9 +1,9 @@
 import application/context.{type Context, AuthContext}
-import application/dto/ingredient_dto.{type IngredientCreateRequest}
-import application/dto/instruction_dto.{type InstructionCreateRequest}
-import application/dto/recipe_details_dto.{type RecipeDetailsCreateRequest}
-import application/dto/recipe_dto.{type RecipeCreateRequest}
-import application/use_cases/create_recipe_use_case
+import application/dto/ingredient_dto.{type IngredientUpsertRequest}
+import application/dto/instruction_dto.{type InstructionUpsertRequest}
+import application/dto/recipe_details_dto.{type RecipeDetailsUpsertRequest}
+import application/dto/recipe_dto.{type RecipeUpsertRequest}
+import application/use_cases/upsert_recipe_use_case.{UpsertRecipeUseCasePort}
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
 import gleam/option.{None, Some}
@@ -12,6 +12,7 @@ import infrastructure/repositories/recipe_repository
 import presentation/rest/encoders
 import presentation/rest/middlewares
 import wisp.{type Request, type Response}
+import youid/uuid
 
 pub fn list(req: Request, ctx: Context) -> Response {
   use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
@@ -49,14 +50,19 @@ pub fn create(req: Request, ctx: Context) -> Response {
   use auth_ctx <- middlewares.require_auth(req, ctx)
   use json <- wisp.require_json(req)
 
-  case decode_recipe_details_create_request(json) {
+  case decode_recipe_details_upsert_request(json) {
     Ok(decoded) -> {
-      case create_recipe_use_case.execute(decoded, auth_ctx) {
+      case
+        upsert_recipe_use_case.execute(
+          UpsertRecipeUseCasePort(uuid.v4(), decoded),
+          auth_ctx,
+        )
+      {
         Ok(recipe_details) ->
           encoders.encode_recipe_details(recipe_details)
           |> json.to_string_builder
           |> wisp.json_response(201)
-        Error(create_recipe_use_case.ValidationFailed(error)) -> {
+        Error(upsert_recipe_use_case.ValidationFailed(error)) -> {
           wisp.log_debug(string.inspect(error))
           wisp.unprocessable_entity()
         }
@@ -73,27 +79,61 @@ pub fn create(req: Request, ctx: Context) -> Response {
   }
 }
 
-fn decode_recipe_details_create_request(
+pub fn update(req: Request, ctx: Context, id: String) -> Response {
+  use auth_ctx <- middlewares.require_auth(req, ctx)
+  use recipe_id <- middlewares.require_uuid(id)
+  use json <- wisp.require_json(req)
+
+  case decode_recipe_details_upsert_request(json) {
+    Ok(decoded) -> {
+      case
+        upsert_recipe_use_case.execute(
+          UpsertRecipeUseCasePort(recipe_id, decoded),
+          auth_ctx,
+        )
+      {
+        Ok(recipe_details) ->
+          encoders.encode_recipe_details(recipe_details)
+          |> json.to_string_builder
+          |> wisp.json_response(200)
+        Error(upsert_recipe_use_case.ValidationFailed(error)) -> {
+          wisp.log_debug(string.inspect(error))
+          wisp.unprocessable_entity()
+        }
+        Error(error) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.internal_server_error()
+        }
+      }
+    }
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.unprocessable_entity()
+    }
+  }
+}
+
+fn decode_recipe_details_upsert_request(
   json: Dynamic,
-) -> Result(RecipeDetailsCreateRequest, DecodeErrors) {
+) -> Result(RecipeDetailsUpsertRequest, DecodeErrors) {
   json
   |> dynamic.decode3(
-    recipe_details_dto.RecipeDetailsCreateRequest,
-    dynamic.field("recipe", decode_recipe_create_request),
-    dynamic.field("ingredients", dynamic.list(decode_ingredient_create_request)),
+    recipe_details_dto.RecipeDetailsUpsertRequest,
+    dynamic.field("recipe", decode_recipe_upsert_request),
+    dynamic.field("ingredients", dynamic.list(decode_ingredient_upsert_request)),
     dynamic.field(
       "instructions",
-      dynamic.list(decode_instruction_create_request),
+      dynamic.list(decode_instruction_upsert_request),
     ),
   )
 }
 
-fn decode_recipe_create_request(
+fn decode_recipe_upsert_request(
   json: Dynamic,
-) -> Result(RecipeCreateRequest, DecodeErrors) {
+) -> Result(RecipeUpsertRequest, DecodeErrors) {
   json
   |> dynamic.decode8(
-    recipe_dto.RecipeCreateRequest,
+    recipe_dto.RecipeUpsertRequest,
     dynamic.field("title", dynamic.string),
     dynamic.field("prep_time", dynamic.optional(dynamic.int)),
     dynamic.field("cook_time", dynamic.optional(dynamic.int)),
@@ -105,24 +145,25 @@ fn decode_recipe_create_request(
   )
 }
 
-fn decode_ingredient_create_request(
+fn decode_ingredient_upsert_request(
   json: Dynamic,
-) -> Result(IngredientCreateRequest, DecodeErrors) {
+) -> Result(IngredientUpsertRequest, DecodeErrors) {
   json
-  |> dynamic.decode3(
-    ingredient_dto.IngredientCreateRequest,
+  |> dynamic.decode4(
+    ingredient_dto.IngredientUpsertRequest,
+    dynamic.field("id", dynamic.string),
     dynamic.field("name", dynamic.string),
     dynamic.field("quantity", dynamic.optional(dynamic.float)),
     dynamic.field("unit", dynamic.optional(dynamic.string)),
   )
 }
 
-fn decode_instruction_create_request(
+fn decode_instruction_upsert_request(
   json: Dynamic,
-) -> Result(InstructionCreateRequest, DecodeErrors) {
+) -> Result(InstructionUpsertRequest, DecodeErrors) {
   json
   |> dynamic.decode2(
-    instruction_dto.InstructionCreateRequest,
+    instruction_dto.InstructionUpsertRequest,
     dynamic.field("step_number", dynamic.int),
     dynamic.field("instruction", dynamic.string),
   )

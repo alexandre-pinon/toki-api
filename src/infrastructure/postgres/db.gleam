@@ -10,6 +10,9 @@ import gleam/string
 import infrastructure/errors.{type DbError, ExecutionFailed}
 import wisp
 
+pub type Transactional(a) =
+  fn(pgo.Connection) -> a
+
 pub fn connect(db_config: DbConfig) -> pgo.Connection {
   pgo.connect(
     pgo.Config(
