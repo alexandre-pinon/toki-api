@@ -10,6 +10,28 @@ import infrastructure/errors.{type DbError, EntityNotFound}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
+pub fn get_active_by_token(
+  token: String,
+  on pool: pgo.Connection,
+) -> Result(RefreshToken, DbError) {
+  use query_result <- result.try(
+    "
+      SELECT id, user_id, token, expires_at, revoked_at, replaced_at, replaced_by
+      FROM refresh_tokens
+      WHERE token = $1
+      AND revoked_at IS NULL
+      AND replaced_at IS NULL
+      AND replaced_by IS NULL
+      AND expires_at > NOW()
+    "
+    |> db.execute(pool, [pgo.text(token)], refresh_token_decoder.new()),
+  )
+
+  list.first(query_result.rows)
+  |> result.replace_error(EntityNotFound)
+  |> result.then(refresh_token_decoder.from_db_to_domain)
+}
+
 pub fn find_all_active(
   user_id: Uuid,
   on pool: pgo.Connection,

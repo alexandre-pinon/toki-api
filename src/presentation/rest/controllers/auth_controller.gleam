@@ -1,9 +1,11 @@
 import application/context.{type Context, AuthContext}
 import application/dto/auth_dto.{
-  type LoginRequest, type RegisterRequest, GoogleLoginRequest,
-  PasswordLoginRequest, PasswordRegisterRequest,
+  type LoginRequest, type RefreshAccessTokenRequest, type RegisterRequest,
+  GoogleIdTokenRequest, GoogleLoginRequest, PasswordLoginRequest,
+  PasswordRegisterRequest,
 }
 import application/use_cases/login_user_use_case.{InvalidCredentials}
+import application/use_cases/refresh_access_token_use_case
 import application/use_cases/register_user_use_case
 import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
@@ -83,7 +85,7 @@ pub fn logout(req: Request, ctx: Context) -> Response {
 pub fn google_login(req: Request, ctx: Context) -> Response {
   use json <- wisp.require_json(req)
 
-  case decode_google_id_token(json) {
+  case decode_google_id_token_request(json) {
     Ok(decoded) ->
       case login_user_use_case.execute(decoded, ctx) {
         Ok(result) ->
@@ -102,9 +104,26 @@ pub fn google_login(req: Request, ctx: Context) -> Response {
   }
 }
 
-//TODO: implement refresh token route !
-pub fn refresh_token(req: Request, ctx: Context) -> Response {
-  todo
+pub fn refresh_access_token(req: Request, ctx: Context) -> Response {
+  use json <- wisp.require_json(req)
+
+  case decode_refresh_access_token_request(json) {
+    Ok(decoded) ->
+      case refresh_access_token_use_case.execute(decoded, ctx) {
+        Ok(result) ->
+          encoders.encode_auth_tokens(result.access_token, result.refresh_token)
+          |> json.to_string_builder
+          |> wisp.json_response(200)
+        Error(error) -> {
+          wisp.log_error(string.inspect(error))
+          wisp.internal_server_error()
+        }
+      }
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.response(401)
+    }
+  }
 }
 
 fn decode_password_register_request(
@@ -128,13 +147,13 @@ fn decode_login_request(json: Dynamic) -> Result(LoginRequest, DecodeErrors) {
   )
 }
 
-fn decode_google_id_token(
+fn decode_google_id_token_request(
   json: Dynamic,
 ) -> Result(LoginRequest, json.DecodeError) {
   use id_token_request <- result.try(
     json
     |> dynamic.decode1(
-      IdTokenRequest,
+      GoogleIdTokenRequest,
       dynamic.field("id_token", dynamic.string),
     )
     |> result.map_error(json.UnexpectedFormat),
@@ -163,6 +182,12 @@ fn get_jwt_payload(jwt: String) -> Result(BitArray, Nil) {
   |> result.then(bit_array.base64_decode)
 }
 
-type IdTokenRequest {
-  IdTokenRequest(id_token: String)
+fn decode_refresh_access_token_request(
+  json: Dynamic,
+) -> Result(RefreshAccessTokenRequest, DecodeErrors) {
+  json
+  |> dynamic.decode1(
+    auth_dto.RefreshAccessTokenRequest,
+    dynamic.field("refresh_token", dynamic.string),
+  )
 }

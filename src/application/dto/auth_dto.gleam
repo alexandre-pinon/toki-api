@@ -19,6 +19,14 @@ pub type RegisterRequest {
   PasswordRegisterRequest(email: String, name: String, password: String)
 }
 
+pub type GoogleIdTokenRequest {
+  GoogleIdTokenRequest(id_token: String)
+}
+
+pub type RefreshAccessTokenRequest {
+  RefreshAccessTokenRequest(token: String)
+}
+
 pub fn validate_register_request(
   input: RegisterRequest,
 ) -> ValidatorResult(RegisterInput, String) {
