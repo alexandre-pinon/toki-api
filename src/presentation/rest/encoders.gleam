@@ -1,10 +1,13 @@
 import domain/entities/ingredient.{type Ingredient}
 import domain/entities/instruction.{type Instruction}
+import domain/entities/planned_meal.{type PlannedMeal}
 import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
 import domain/entities/user.{type User}
 import domain/value_objects/cuisine_type
+import domain/value_objects/meal_type
 import domain/value_objects/unit_type
+import gleam/int
 import gleam/json.{type Json}
 import gleam/option
 import gleam/string
@@ -83,5 +86,29 @@ pub fn encode_recipe_details(recipe_details: RecipeDetails) -> Json {
       "instructions",
       json.array(recipe_details.instructions, encode_instruction),
     ),
+  ])
+}
+
+pub fn encode_planned_meal(planned_meal: PlannedMeal) -> Json {
+  json.object([
+    #("id", encode_uuid(planned_meal.id)),
+    #("user_id", encode_uuid(planned_meal.user_id)),
+    #("recipe_id", json.nullable(planned_meal.recipe_id, encode_uuid)),
+    #(
+      "meal_date",
+      json.string(
+        int.to_string(planned_meal.meal_date.year)
+        <> "-"
+        <> planned_meal.meal_date.month
+        |> int.to_string
+        |> string.pad_left(2, "0")
+        <> "-"
+        <> planned_meal.meal_date.date
+        |> int.to_string
+        |> string.pad_left(2, "0"),
+      ),
+    ),
+    #("meal_type", json.string(meal_type.to_string(planned_meal.meal_type))),
+    #("servings", json.int(planned_meal.servings)),
   ])
 }

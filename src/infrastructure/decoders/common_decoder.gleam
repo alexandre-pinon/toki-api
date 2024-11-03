@@ -1,20 +1,22 @@
-import domain/value_objects/db_time.{type DbTime}
 import gleam/dynamic.{type DecodeError, type Decoder, type Dynamic}
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import infrastructure/errors.{type DbError, DecodingFailed}
 import youid/uuid.{type Uuid}
 
-pub fn new_db_time_decoder() -> Decoder(DbTime) {
-  dynamic.tuple2(
-    dynamic.tuple3(dynamic.int, dynamic.int, dynamic.int),
-    dynamic.tuple3(dynamic.int, dynamic.int, dynamic.int),
-  )
-}
-
 pub fn from_db_uuid_to_domain_uuid(db_uuid: BitArray) -> Result(Uuid, DbError) {
   uuid.from_bit_array(db_uuid)
   |> result.replace_error(DecodingFailed("couldn't deserialize db id to uuid"))
+}
+
+pub fn from_optional_db_uuid_to_optional_domain_uuid(
+  db_uuid: Option(BitArray),
+) -> Result(Option(Uuid), DbError) {
+  case db_uuid {
+    Some(db_uuid) -> from_db_uuid_to_domain_uuid(db_uuid) |> result.map(Some)
+    None -> Ok(None)
+  }
 }
 
 pub fn from_json_db_uuid_to_domain_uuid(

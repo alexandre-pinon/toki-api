@@ -16,7 +16,21 @@ pub fn require_uuid(id: String, next: fn(Uuid) -> Response) -> Response {
   case uuid.from_string(id) {
     Ok(valid_uuid) -> next(valid_uuid)
     Error(Nil) -> {
-      wisp.log_error("Invalid uuid: " <> id)
+      wisp.log_info("Invalid uuid: " <> id)
+      wisp.bad_request()
+    }
+  }
+}
+
+pub fn require_query(
+  req: Request,
+  key: String,
+  next: fn(String) -> Response,
+) -> Response {
+  case list.key_find(wisp.get_query(req), key) {
+    Ok(value) -> next(value)
+    Error(Nil) -> {
+      wisp.log_info("Missing " <> key <> " in query")
       wisp.bad_request()
     }
   }

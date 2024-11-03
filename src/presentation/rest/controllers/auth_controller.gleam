@@ -5,7 +5,9 @@ import application/dto/auth_dto.{
   PasswordRegisterRequest,
 }
 import application/use_cases/login_user_use_case.{InvalidCredentials}
-import application/use_cases/refresh_access_token_use_case
+import application/use_cases/refresh_access_token_use_case.{
+  ActiveRefreshTokenNotFound,
+}
 import application/use_cases/register_user_use_case
 import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
@@ -114,6 +116,7 @@ pub fn refresh_access_token(req: Request, ctx: Context) -> Response {
           encoders.encode_auth_tokens(result.access_token, result.refresh_token)
           |> json.to_string_builder
           |> wisp.json_response(200)
+        Error(ActiveRefreshTokenNotFound) -> wisp.response(401)
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()

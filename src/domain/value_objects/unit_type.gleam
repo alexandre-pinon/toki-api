@@ -19,8 +19,8 @@ pub type UnitType {
   Unit
 }
 
-pub fn to_string(cuisine_type: UnitType) -> String {
-  case cuisine_type {
+pub fn to_string(unit_type: UnitType) -> String {
+  case unit_type {
     Ml -> "ml"
     Cl -> "cl"
     Dl -> "dl"
@@ -42,8 +42,8 @@ pub fn to_string(cuisine_type: UnitType) -> String {
   }
 }
 
-pub fn from_string(cuisine_type: String) -> UnitType {
-  case cuisine_type {
+pub fn from_string(unit_type: String) -> UnitType {
+  case unit_type {
     "ml" -> Ml
     "cl" -> Cl
     "dl" -> Dl

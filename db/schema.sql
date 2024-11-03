@@ -93,6 +93,18 @@ CREATE TYPE public.cuisine_type AS ENUM (
 
 
 --
+-- Name: meal_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.meal_type AS ENUM (
+    'breakfast',
+    'lunch',
+    'dinner',
+    'snack'
+);
+
+
+--
 -- Name: unit_type; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -148,6 +160,23 @@ CREATE TABLE public.instructions (
     instruction text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone
+);
+
+
+--
+-- Name: planned_meals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.planned_meals (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    recipe_id uuid,
+    meal_date date NOT NULL,
+    meal_type public.meal_type NOT NULL,
+    servings integer NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    CONSTRAINT planned_meals_servings_check CHECK ((servings > 0))
 );
 
 
@@ -230,6 +259,14 @@ ALTER TABLE ONLY public.instructions
 
 
 --
+-- Name: planned_meals planned_meals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planned_meals
+    ADD CONSTRAINT planned_meals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: recipes recipes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -294,6 +331,22 @@ ALTER TABLE ONLY public.instructions
 
 
 --
+-- Name: planned_meals planned_meals_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planned_meals
+    ADD CONSTRAINT planned_meals_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE SET NULL;
+
+
+--
+-- Name: planned_meals planned_meals_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planned_meals
+    ADD CONSTRAINT planned_meals_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: recipes recipes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -334,4 +387,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241027142537'),
     ('20241027143255'),
     ('20241031081330'),
-    ('20241103140034');
+    ('20241103140034'),
+    ('20241103162845');
