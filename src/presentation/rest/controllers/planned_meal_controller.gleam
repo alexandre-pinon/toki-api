@@ -1,4 +1,4 @@
-import application/context.{type Context}
+import application/context.{type Context, AuthContext}
 import application/dto/planned_meal_dto.{type PlannedMealUpsertRequest}
 import application/use_cases/upsert_planned_meal_use_case.{
   UpsertPlannedMealUseCasePort,
@@ -94,6 +94,20 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
     Error(error) -> {
       wisp.log_error(string.inspect(error))
       wisp.unprocessable_entity()
+    }
+  }
+}
+
+pub fn delete(req: Request, ctx: Context, id: String) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+  use planned_meal_id <- middlewares.require_uuid(id)
+
+  case planned_meal_repository.delete(planned_meal_id, user_id, ctx.pool) {
+    Ok(True) -> wisp.no_content()
+    Ok(False) -> wisp.not_found()
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
     }
   }
 }

@@ -53,3 +53,18 @@ pub fn upsert(
   |> result.replace_error(EntityNotFound)
   |> result.then(planned_meal_decoder.from_db_to_domain)
 }
+
+pub fn delete(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Bool, DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  "DELETE FROM planned_meals WHERE id = $1 AND user_id = $2"
+  |> db.execute(pool, query_input, dynamic.dynamic)
+  |> result.map(fn(returned) { returned.count > 0 })
+}
