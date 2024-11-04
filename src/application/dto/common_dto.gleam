@@ -1,3 +1,4 @@
+import birl.{type Day}
 import gleam/result
 import non_empty_list
 import valid.{type Validator}
@@ -50,6 +51,14 @@ pub fn build10(constructor: fn(a, b, c, d, e, f, g, h, i, j) -> value) {
 pub fn string_is_uuid(error: e) -> Validator(String, Uuid, e) {
   fn(value: String) {
     uuid.from_string(value)
+    |> result.replace_error(non_empty_list.new(error, []))
+  }
+}
+
+pub fn string_is_date(error: e) -> Validator(String, Day, e) {
+  fn(value: String) {
+    birl.parse(value)
+    |> result.map(birl.get_day)
     |> result.replace_error(non_empty_list.new(error, []))
   }
 }

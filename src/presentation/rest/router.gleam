@@ -25,6 +25,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["recipes", id] -> handle_recipe(req, ctx, id)
 
     ["planned_meals"] -> handle_planned_meals(req, ctx)
+    ["planned_meals", id] -> handle_planned_meal(req, ctx, id)
 
     _ -> wisp.not_found()
   }
@@ -102,6 +103,14 @@ fn handle_recipe(req: Request, ctx: Context, id: String) -> Response {
 fn handle_planned_meals(req: Request, ctx: Context) -> Response {
   case req.method {
     Get -> planned_meal_controller.list(req, ctx)
-    _ -> wisp.method_not_allowed([Get])
+    Post -> planned_meal_controller.create(req, ctx)
+    _ -> wisp.method_not_allowed([Get, Post])
+  }
+}
+
+fn handle_planned_meal(req: Request, ctx: Context, id: String) -> Response {
+  case req.method {
+    Put -> planned_meal_controller.update(req, ctx, id)
+    _ -> wisp.method_not_allowed([Put])
   }
 }
