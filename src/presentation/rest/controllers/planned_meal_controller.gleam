@@ -14,12 +14,15 @@ import wisp.{type Request, type Response}
 import youid/uuid
 
 pub fn list(req: Request, ctx: Context) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
   use start_date_str <- middlewares.require_query(req, "start_date")
   use end_date_str <- middlewares.require_query(req, "end_date")
   use start_date <- parse_timestamp_as_date(start_date_str)
   use end_date <- parse_timestamp_as_date(end_date_str)
 
-  case planned_meal_repository.find_all(start_date, end_date, ctx.pool) {
+  case
+    planned_meal_repository.find_all(user_id, start_date, end_date, ctx.pool)
+  {
     Ok(planned_meals) ->
       json.array(planned_meals, encoders.encode_planned_meal)
       |> json.to_string_builder

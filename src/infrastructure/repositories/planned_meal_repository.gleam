@@ -10,11 +10,13 @@ import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
 pub fn find_all(
+  for user_id: Uuid,
   from start_date: Day,
   to end_date: Day,
   on pool: pgo.Connection,
 ) -> Result(List(PlannedMeal), DbError) {
   let query_input = [
+    pgo.text(uuid.to_string(user_id)),
     pgo.date(#(start_date.year, start_date.month, start_date.date)),
     pgo.date(#(end_date.year, end_date.month, end_date.date)),
   ]
@@ -22,7 +24,8 @@ pub fn find_all(
   "
     SELECT id, user_id, recipe_id, meal_date, meal_type, servings
     FROM planned_meals
-    WHERE meal_date BETWEEN $1 AND $2
+    WHERE user_id = $1
+    AND meal_date BETWEEN $2 AND $3
   "
   |> db.execute(pool, query_input, planned_meal_decoder.new())
   |> result.map(fn(returned) { returned.rows })
