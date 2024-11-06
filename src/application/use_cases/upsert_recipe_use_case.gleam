@@ -60,20 +60,28 @@ fn upsert_recipe_details(
       |> result.replace_error("upsert recipe failed"),
     )
 
+    use _ <- result.try(
+      ingredient_repository.delete_recipe_ingredients(recipe.id, transaction)
+      |> result.replace_error("delete recipe ingredients failed"),
+    )
     use ingredients <- result.try(
-      ingredient_repository.bulk_upsert(
+      ingredient_repository.bulk_insert(
         list.map(input.ingredients, ingredient_dto.to_entity(_, recipe.id)),
         transaction,
       )
-      |> result.replace_error("bulk upsert ingredient failed"),
+      |> result.replace_error("bulk insert ingredient failed"),
     )
 
+    use _ <- result.try(
+      instruction_repository.delete_recipe_instructions(recipe.id, transaction)
+      |> result.replace_error("delete recipe instructions failed"),
+    )
     use instructions <- result.try(
-      instruction_repository.bulk_upsert(
+      instruction_repository.bulk_insert(
         list.map(input.instructions, instruction_dto.to_entity(_, recipe.id)),
         transaction,
       )
-      |> result.replace_error("bulk upsert instruction failed"),
+      |> result.replace_error("bulk insert instruction failed"),
     )
 
     Ok(recipe_details.RecipeDetails(recipe, ingredients, instructions))

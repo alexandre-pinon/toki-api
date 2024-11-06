@@ -163,9 +163,8 @@ fn decode_ingredient_upsert_request(
   json: Dynamic,
 ) -> Result(IngredientUpsertRequest, DecodeErrors) {
   json
-  |> dynamic.decode4(
+  |> dynamic.decode3(
     ingredient_dto.IngredientUpsertRequest,
-    dynamic.field("id", dynamic.string),
     dynamic.field("name", dynamic.string),
     dynamic.field("quantity", dynamic.optional(dynamic.float)),
     dynamic.field("unit", dynamic.optional(dynamic.string)),

@@ -7,7 +7,6 @@ import youid/uuid.{type Uuid}
 
 pub type IngredientUpsertRequest {
   IngredientUpsertRequest(
-    id: String,
     name: String,
     quantity: Option(Float),
     unit: Option(String),
@@ -16,7 +15,6 @@ pub type IngredientUpsertRequest {
 
 pub type IngredientUpsertInput {
   IngredientUpsertInput(
-    id: Uuid,
     name: String,
     quantity: Option(Float),
     unit: Option(UnitType),
@@ -26,8 +24,7 @@ pub type IngredientUpsertInput {
 pub fn validate_ingredient_upsert_request(
   input: IngredientUpsertRequest,
 ) -> ValidatorResult(IngredientUpsertInput, String) {
-  valid.build4(IngredientUpsertInput)
-  |> valid.check(input.id, common_dto.string_is_uuid("invalid id"))
+  valid.build3(IngredientUpsertInput)
   |> valid.check(input.name, valid.string_is_not_empty("empty name"))
   |> valid.check(
     input.quantity,
@@ -44,7 +41,7 @@ pub fn to_entity(
   for recipe_id: Uuid,
 ) -> Ingredient {
   ingredient.Ingredient(
-    id: input.id,
+    id: uuid.v4(),
     recipe_id: recipe_id,
     name: input.name,
     quantity: input.quantity,
