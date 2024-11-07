@@ -130,9 +130,139 @@ CREATE TYPE public.unit_type AS ENUM (
 );
 
 
+--
+-- Name: unit_type_family; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.unit_type_family AS ENUM (
+    'weight',
+    'volume',
+    'other'
+);
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: shopping_list_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shopping_list_items (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    planned_meal_id uuid,
+    name text NOT NULL,
+    unit public.unit_type,
+    unit_family public.unit_type_family,
+    quantity numeric,
+    checked boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: aggregated_shopping_list; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.aggregated_shopping_list AS
+ WITH normalized_quantities AS (
+         SELECT shopping_list_items.id,
+            shopping_list_items.user_id,
+            shopping_list_items.name,
+            shopping_list_items.unit,
+            shopping_list_items.unit_family,
+                CASE
+                    WHEN (shopping_list_items.unit_family = 'weight'::public.unit_type_family) THEN
+                    CASE shopping_list_items.unit
+                        WHEN 'kg'::public.unit_type THEN (shopping_list_items.quantity * (1000)::numeric)
+                        WHEN 'g'::public.unit_type THEN shopping_list_items.quantity
+                        ELSE NULL::numeric
+                    END
+                    WHEN (shopping_list_items.unit_family = 'volume'::public.unit_type_family) THEN
+                    CASE shopping_list_items.unit
+                        WHEN 'l'::public.unit_type THEN (shopping_list_items.quantity * (1000)::numeric)
+                        WHEN 'dl'::public.unit_type THEN (shopping_list_items.quantity * (100)::numeric)
+                        WHEN 'cl'::public.unit_type THEN (shopping_list_items.quantity * (10)::numeric)
+                        WHEN 'ml'::public.unit_type THEN shopping_list_items.quantity
+                        ELSE NULL::numeric
+                    END
+                    ELSE shopping_list_items.quantity
+                END AS normalized_quantity,
+            shopping_list_items.checked
+           FROM public.shopping_list_items
+        ), weight_volume_items AS (
+         SELECT array_agg(normalized_quantities.id) AS ids,
+            normalized_quantities.user_id,
+            normalized_quantities.name,
+            normalized_quantities.unit_family,
+                CASE
+                    WHEN (normalized_quantities.unit_family = 'weight'::public.unit_type_family) THEN
+                    CASE
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (1000)::numeric) THEN 'kg'::public.unit_type
+                        ELSE 'g'::public.unit_type
+                    END
+                    WHEN (normalized_quantities.unit_family = 'volume'::public.unit_type_family) THEN
+                    CASE
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (1000)::numeric) THEN 'l'::public.unit_type
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (100)::numeric) THEN 'dl'::public.unit_type
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (10)::numeric) THEN 'cl'::public.unit_type
+                        ELSE 'ml'::public.unit_type
+                    END
+                    ELSE NULL::public.unit_type
+                END AS unit,
+                CASE
+                    WHEN (normalized_quantities.unit_family = 'weight'::public.unit_type_family) THEN
+                    CASE
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (1000)::numeric) THEN round((sum(normalized_quantities.normalized_quantity) / (1000)::numeric), 2)
+                        ELSE sum(normalized_quantities.normalized_quantity)
+                    END
+                    WHEN (normalized_quantities.unit_family = 'volume'::public.unit_type_family) THEN
+                    CASE
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (1000)::numeric) THEN round((sum(normalized_quantities.normalized_quantity) / (1000)::numeric), 2)
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (100)::numeric) THEN round((sum(normalized_quantities.normalized_quantity) / (100)::numeric), 2)
+                        WHEN (sum(normalized_quantities.normalized_quantity) >= (10)::numeric) THEN round((sum(normalized_quantities.normalized_quantity) / (10)::numeric), 2)
+                        ELSE sum(normalized_quantities.normalized_quantity)
+                    END
+                    ELSE NULL::numeric
+                END AS quantity,
+            bool_and(normalized_quantities.checked) AS checked
+           FROM normalized_quantities
+          WHERE (normalized_quantities.unit_family = ANY (ARRAY['weight'::public.unit_type_family, 'volume'::public.unit_type_family]))
+          GROUP BY normalized_quantities.user_id, normalized_quantities.name, normalized_quantities.unit_family
+        ), other_items AS (
+         SELECT array_agg(normalized_quantities.id) AS ids,
+            normalized_quantities.user_id,
+            normalized_quantities.name,
+            normalized_quantities.unit_family,
+            normalized_quantities.unit,
+            sum(normalized_quantities.normalized_quantity) AS quantity,
+            bool_and(normalized_quantities.checked) AS checked
+           FROM normalized_quantities
+          WHERE ((normalized_quantities.unit_family = 'other'::public.unit_type_family) OR (normalized_quantities.unit_family IS NULL))
+          GROUP BY normalized_quantities.user_id, normalized_quantities.name, normalized_quantities.unit_family, normalized_quantities.unit
+        )
+ SELECT weight_volume_items.ids,
+    weight_volume_items.user_id,
+    weight_volume_items.name,
+    weight_volume_items.unit,
+    weight_volume_items.unit_family,
+    weight_volume_items.quantity,
+    weight_volume_items.checked
+   FROM weight_volume_items
+UNION ALL
+ SELECT other_items.ids,
+    other_items.user_id,
+    other_items.name,
+    other_items.unit,
+    other_items.unit_family,
+    other_items.quantity,
+    other_items.checked
+   FROM other_items
+  ORDER BY 3, 4;
+
 
 --
 -- Name: ingredients; Type: TABLE; Schema: public; Owner: -
@@ -291,6 +421,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: shopping_list_items shopping_list_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shopping_list_items
+    ADD CONSTRAINT shopping_list_items_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: instructions step_number_recipe_id; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -371,6 +509,22 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
+-- Name: shopping_list_items shopping_list_items_planned_meal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shopping_list_items
+    ADD CONSTRAINT shopping_list_items_planned_meal_id_fkey FOREIGN KEY (planned_meal_id) REFERENCES public.planned_meals(id) ON DELETE CASCADE;
+
+
+--
+-- Name: shopping_list_items shopping_list_items_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shopping_list_items
+    ADD CONSTRAINT shopping_list_items_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -388,4 +542,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241027143255'),
     ('20241031081330'),
     ('20241103140034'),
-    ('20241103162845');
+    ('20241103162845'),
+    ('20241106183825');
