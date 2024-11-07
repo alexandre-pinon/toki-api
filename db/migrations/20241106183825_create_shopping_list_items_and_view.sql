@@ -9,6 +9,7 @@ CREATE TABLE shopping_list_items (
   unit unit_type,
   unit_family unit_type_family,
   quantity DECIMAL,
+  meal_date DATE,
   checked BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL
@@ -38,9 +39,13 @@ CREATE VIEW aggregated_shopping_list AS WITH normalized_quantities AS (
       END
       ELSE quantity
     END AS normalized_quantity,
+    meal_date,
     checked
   FROM
     shopping_list_items
+  WHERE
+    meal_date IS NULL
+    OR meal_date >= NOW()
 ),
 weight_volume_items AS (
   SELECT
@@ -72,6 +77,7 @@ weight_volume_items AS (
         ELSE SUM(normalized_quantity)
       END
     END as quantity,
+    MIN(meal_date) as earliest_meal_date,
     bool_and(checked) as checked
   FROM
     normalized_quantities
@@ -90,6 +96,7 @@ other_items AS (
     unit_family,
     unit,
     SUM(normalized_quantity) as quantity,
+    MIN(meal_date) as earliest_meal_date,
     bool_and(checked) as checked
   FROM
     normalized_quantities
@@ -109,6 +116,12 @@ SELECT
   unit,
   unit_family,
   quantity,
+  earliest_meal_date AS meal_date,
+  EXTRACT(
+    ISODOW
+    FROM
+      earliest_meal_date
+  ) AS week_day,
   checked
 FROM
   weight_volume_items
@@ -121,6 +134,12 @@ SELECT
   unit,
   unit_family,
   quantity,
+  earliest_meal_date AS meal_date,
+  EXTRACT(
+    ISODOW
+    FROM
+      earliest_meal_date
+  ) AS week_day,
   checked
 FROM
   other_items

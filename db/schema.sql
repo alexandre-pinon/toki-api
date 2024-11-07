@@ -157,6 +157,7 @@ CREATE TABLE public.shopping_list_items (
     unit public.unit_type,
     unit_family public.unit_type_family,
     quantity numeric,
+    meal_date date,
     checked boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone NOT NULL
@@ -191,8 +192,10 @@ CREATE VIEW public.aggregated_shopping_list AS
                     END
                     ELSE shopping_list_items.quantity
                 END AS normalized_quantity,
+            shopping_list_items.meal_date,
             shopping_list_items.checked
            FROM public.shopping_list_items
+          WHERE ((shopping_list_items.meal_date IS NULL) OR (shopping_list_items.meal_date >= now()))
         ), weight_volume_items AS (
          SELECT array_agg(normalized_quantities.id) AS ids,
             normalized_quantities.user_id,
@@ -228,6 +231,7 @@ CREATE VIEW public.aggregated_shopping_list AS
                     END
                     ELSE NULL::numeric
                 END AS quantity,
+            min(normalized_quantities.meal_date) AS earliest_meal_date,
             bool_and(normalized_quantities.checked) AS checked
            FROM normalized_quantities
           WHERE (normalized_quantities.unit_family = ANY (ARRAY['weight'::public.unit_type_family, 'volume'::public.unit_type_family]))
@@ -239,6 +243,7 @@ CREATE VIEW public.aggregated_shopping_list AS
             normalized_quantities.unit_family,
             normalized_quantities.unit,
             sum(normalized_quantities.normalized_quantity) AS quantity,
+            min(normalized_quantities.meal_date) AS earliest_meal_date,
             bool_and(normalized_quantities.checked) AS checked
            FROM normalized_quantities
           WHERE ((normalized_quantities.unit_family = 'other'::public.unit_type_family) OR (normalized_quantities.unit_family IS NULL))
@@ -250,6 +255,8 @@ CREATE VIEW public.aggregated_shopping_list AS
     weight_volume_items.unit,
     weight_volume_items.unit_family,
     weight_volume_items.quantity,
+    weight_volume_items.earliest_meal_date AS meal_date,
+    EXTRACT(isodow FROM weight_volume_items.earliest_meal_date) AS week_day,
     weight_volume_items.checked
    FROM weight_volume_items
 UNION ALL
@@ -259,6 +266,8 @@ UNION ALL
     other_items.unit,
     other_items.unit_family,
     other_items.quantity,
+    other_items.earliest_meal_date AS meal_date,
+    EXTRACT(isodow FROM other_items.earliest_meal_date) AS week_day,
     other_items.checked
    FROM other_items
   ORDER BY 3, 4;
@@ -320,14 +329,15 @@ CREATE TABLE public.recipes (
     title text NOT NULL,
     prep_time integer,
     cook_time integer,
-    servings integer,
+    servings integer NOT NULL,
     source_url text,
     image_url text,
     cuisine_type public.cuisine_type,
     rating integer,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone,
-    CONSTRAINT recipes_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+    CONSTRAINT recipes_rating_check CHECK (((rating >= 1) AND (rating <= 5))),
+    CONSTRAINT recipes_servings_check CHECK ((servings > 0))
 );
 
 
@@ -437,6 +447,14 @@ ALTER TABLE ONLY public.instructions
 
 
 --
+-- Name: planned_meals user_id_meal_type_meal_date; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.planned_meals
+    ADD CONSTRAINT user_id_meal_type_meal_date UNIQUE (user_id, meal_type, meal_date);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -543,4 +561,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241031081330'),
     ('20241103140034'),
     ('20241103162845'),
-    ('20241106183825');
+    ('20241106183825'),
+    ('20241107075043'),
+    ('20241107083217');

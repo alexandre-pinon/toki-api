@@ -39,7 +39,7 @@ pub fn encode_recipe(recipe: Recipe) -> Json {
     #("title", json.string(recipe.title)),
     #("prep_time", json.nullable(recipe.prep_time, json.int)),
     #("cook_time", json.nullable(recipe.cook_time, json.int)),
-    #("servings", json.nullable(recipe.servings, json.int)),
+    #("servings", json.int(recipe.servings)),
     #("source_url", json.nullable(recipe.source_url, json.string)),
     #("image_url", json.nullable(recipe.image_url, json.string)),
     #(

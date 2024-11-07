@@ -151,7 +151,7 @@ fn decode_recipe_upsert_request(
     dynamic.field("title", dynamic.string),
     dynamic.field("prep_time", dynamic.optional(dynamic.int)),
     dynamic.field("cook_time", dynamic.optional(dynamic.int)),
-    dynamic.field("servings", dynamic.optional(dynamic.int)),
+    dynamic.field("servings", dynamic.int),
     dynamic.field("source_url", dynamic.optional(dynamic.string)),
     dynamic.field("image_url", dynamic.optional(dynamic.string)),
     dynamic.field("cuisine_type", dynamic.optional(dynamic.string)),

@@ -10,7 +10,7 @@ pub type RecipeUpsertRequest {
     title: String,
     prep_time: Option(Int),
     cook_time: Option(Int),
-    servings: Option(Int),
+    servings: Int,
     source_url: Option(String),
     image_url: Option(String),
     cuisine_type: Option(String),
@@ -23,7 +23,7 @@ pub type RecipeUpsertInput {
     title: String,
     prep_time: Option(Int),
     cook_time: Option(Int),
-    servings: Option(Int),
+    servings: Int,
     source_url: Option(String),
     image_url: Option(String),
     cuisine_type: Option(CuisineType),
@@ -44,10 +44,7 @@ pub fn validate_recipe_upsert_request(
     input.cook_time,
     valid.if_some(valid.int_min(0, "negative cook time")),
   )
-  |> valid.check(
-    input.servings,
-    valid.if_some(valid.int_min(1, "servings inferior to 1")),
-  )
+  |> valid.check(input.servings, valid.int_min(1, "servings inferior to 1"))
   |> valid.check(
     input.source_url,
     valid.if_some(valid.string_is_not_empty("empty source_url")),

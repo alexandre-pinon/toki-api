@@ -1,3 +1,5 @@
+import domain/value_objects/unit_type_family.{type UnitTypeFamily}
+
 pub type UnitType {
   Ml
   Cl
@@ -62,5 +64,13 @@ pub fn from_string(unit_type: String) -> UnitType {
     "slice" -> Slice
     "to_taste" -> ToTaste
     _ -> Unit
+  }
+}
+
+pub fn to_family(unit_type: UnitType) -> UnitTypeFamily {
+  case unit_type {
+    Ml | Cl | Dl | L -> unit_type_family.Volume
+    G | Kg -> unit_type_family.Weight
+    _ -> unit_type_family.Other
   }
 }

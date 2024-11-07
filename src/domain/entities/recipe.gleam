@@ -9,7 +9,7 @@ pub type Recipe {
     title: String,
     prep_time: Option(Int),
     cook_time: Option(Int),
-    servings: Option(Int),
+    servings: Int,
     source_url: Option(String),
     image_url: Option(String),
     cuisine_type: Option(CuisineType),

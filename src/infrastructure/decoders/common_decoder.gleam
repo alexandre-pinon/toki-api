@@ -28,6 +28,20 @@ pub fn from_json_db_uuid_to_domain_uuid(
   ))
 }
 
+pub fn parse_optional(
+  value: Option(v),
+  parse_fn: fn(v) -> Result(p, e),
+  label: String,
+) -> Result(Option(p), DbError) {
+  case value {
+    Some(value) ->
+      parse_fn(value)
+      |> result.map(Some)
+      |> result.replace_error(DecodingFailed("couldn't deserialize " <> label))
+    None -> Ok(None)
+  }
+}
+
 pub fn decode10(
   constructor: fn(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10) -> t,
   t1: Decoder(t1),
