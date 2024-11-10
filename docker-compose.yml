@@ -3,11 +3,11 @@ version: "3.9"
 services:
   db:
     image: postgres:17.0
-    container_name: postgres
+    container_name: toki_db
     environment:
-      POSTGRES_DB: epicook
-      POSTGRES_USER: epicook
-      POSTGRES_PASSWORD: epicook
+      POSTGRES_DB: toki
+      POSTGRES_USER: toki
+      POSTGRES_PASSWORD: toki
     ports:
       - "5432:5432"
     volumes:

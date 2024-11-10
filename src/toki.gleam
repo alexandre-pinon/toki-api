@@ -38,7 +38,9 @@ type InitError {
 fn start_server() -> Result(Nil, InitError) {
   use env <- result.try(env.load() |> result.map_error(EnvError))
 
-  wisp.log_info("Starting Epicook API on port: " <> int.to_string(env.port))
+  wisp.log_info(
+    "Starting " <> env.app_name <> " API on port: " <> int.to_string(env.port),
+  )
 
   let pool = db.connect(env.db_config)
   let ctx =
