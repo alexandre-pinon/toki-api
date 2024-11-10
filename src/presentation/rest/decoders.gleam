@@ -135,8 +135,8 @@ pub fn decode_ingredient_upsert_request(
   |> dynamic.decode3(
     ingredient_dto.IngredientUpsertRequest,
     dynamic.field("name", dynamic.string),
-    dynamic.optional_field("quantity", dynamic.float),
-    dynamic.optional_field("unit", dynamic.string),
+    dynamic.field("quantity", dynamic.optional(dynamic.float)),
+    dynamic.field("unit", dynamic.optional(dynamic.string)),
   )
 }
 

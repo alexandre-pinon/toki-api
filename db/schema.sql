@@ -11,20 +11,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
-
-
---
--- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
-
-
---
 -- Name: cuisine_type; Type: TYPE; Schema: public; Owner: -
 --
 
