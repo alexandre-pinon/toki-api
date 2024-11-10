@@ -30,6 +30,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
     ["shopping-list-item"] -> handle_shopping_list_items(req, ctx)
     ["shopping-list-item", id] -> handle_shopping_list_item(req, ctx, id)
+    ["shopping-list-item", id, "check"] ->
+      handle_shopping_list_item_check(req, ctx, id)
+    ["shopping-list-item", id, "uncheck"] ->
+      handle_shopping_list_item_uncheck(req, ctx, id)
 
     _ -> wisp.not_found()
   }
@@ -133,5 +137,27 @@ fn handle_shopping_list_item(req: Request, ctx: Context, id: String) -> Response
     Put -> shopping_list_item_controller.update(req, ctx, id)
     Delete -> shopping_list_item_controller.delete(req, ctx, id)
     _ -> wisp.method_not_allowed([Put, Delete])
+  }
+}
+
+fn handle_shopping_list_item_check(
+  req: Request,
+  ctx: Context,
+  id: String,
+) -> Response {
+  case req.method {
+    Put -> shopping_list_item_controller.check(req, ctx, id)
+    _ -> wisp.method_not_allowed([Put])
+  }
+}
+
+fn handle_shopping_list_item_uncheck(
+  req: Request,
+  ctx: Context,
+  id: String,
+) -> Response {
+  case req.method {
+    Put -> shopping_list_item_controller.uncheck(req, ctx, id)
+    _ -> wisp.method_not_allowed([Put])
   }
 }

@@ -94,6 +94,46 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   }
 }
 
+pub fn check(req: Request, ctx: Context, id: String) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+  use shopping_list_item_id <- middlewares.require_uuid(id)
+
+  case
+    shopping_list_item_repository.check(
+      shopping_list_item_id,
+      user_id,
+      ctx.pool,
+    )
+  {
+    Ok(True) -> wisp.no_content()
+    Ok(False) -> wisp.not_found()
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
+    }
+  }
+}
+
+pub fn uncheck(req: Request, ctx: Context, id: String) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+  use shopping_list_item_id <- middlewares.require_uuid(id)
+
+  case
+    shopping_list_item_repository.uncheck(
+      shopping_list_item_id,
+      user_id,
+      ctx.pool,
+    )
+  {
+    Ok(True) -> wisp.no_content()
+    Ok(False) -> wisp.not_found()
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
+    }
+  }
+}
+
 pub fn delete(req: Request, ctx: Context, id: String) -> Response {
   use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
   use shopping_list_item_id <- middlewares.require_uuid(id)

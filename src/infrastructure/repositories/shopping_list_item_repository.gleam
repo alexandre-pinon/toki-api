@@ -57,6 +57,44 @@ pub fn bulk_create(
   |> list.try_map(shopping_list_item_decoder.from_db_to_domain)
 }
 
+pub fn check(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Bool, DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  "
+    UPDATE shopping_list_items
+    SET checked = TRUE
+    WHERE id = $1 AND user_id = $2
+  "
+  |> db.execute(pool, query_input, dynamic.dynamic)
+  |> result.map(fn(returned) { returned.count > 0 })
+}
+
+pub fn uncheck(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Bool, DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  "
+    UPDATE shopping_list_items
+    SET checked = FALSE
+    WHERE id = $1 AND user_id = $2
+  "
+  |> db.execute(pool, query_input, dynamic.dynamic)
+  |> result.map(fn(returned) { returned.count > 0 })
+}
+
 pub fn delete(
   id: Uuid,
   for user_id: Uuid,
