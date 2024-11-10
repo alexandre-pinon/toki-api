@@ -131,6 +131,7 @@ fn handle_shopping_list_items(req: Request, ctx: Context) -> Response {
 fn handle_shopping_list_item(req: Request, ctx: Context, id: String) -> Response {
   case req.method {
     Put -> shopping_list_item_controller.update(req, ctx, id)
-    _ -> wisp.method_not_allowed([Put])
+    Delete -> shopping_list_item_controller.delete(req, ctx, id)
+    _ -> wisp.method_not_allowed([Put, Delete])
   }
 }
