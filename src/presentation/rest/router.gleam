@@ -83,8 +83,9 @@ fn handle_users(req: Request, ctx: Context) -> Response {
 
 fn handle_user_profile(req: Request, ctx: Context) -> Response {
   case req.method {
-    Get -> user_controller.profile(req, ctx)
-    _ -> wisp.method_not_allowed([Get])
+    Get -> user_controller.get_profile(req, ctx)
+    Put -> user_controller.update_profile(req, ctx)
+    _ -> wisp.method_not_allowed([Get, Put])
   }
 }
 
