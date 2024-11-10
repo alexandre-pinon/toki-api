@@ -1,3 +1,7 @@
+import birl
+import domain/entities/aggregated_shopping_list_item.{
+  type AggregatedShoppingListItem,
+}
 import domain/entities/ingredient.{type Ingredient}
 import domain/entities/instruction.{type Instruction}
 import domain/entities/planned_meal.{type PlannedMeal}
@@ -5,9 +9,10 @@ import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
 import domain/entities/user.{type User}
 import domain/value_objects/cuisine_type
+import domain/value_objects/day
 import domain/value_objects/meal_type
 import domain/value_objects/unit_type
-import gleam/int
+import domain/value_objects/unit_type_family
 import gleam/json.{type Json}
 import gleam/option
 import gleam/string
@@ -94,21 +99,45 @@ pub fn encode_planned_meal(planned_meal: PlannedMeal) -> Json {
     #("id", encode_uuid(planned_meal.id)),
     #("user_id", encode_uuid(planned_meal.user_id)),
     #("recipe_id", json.nullable(planned_meal.recipe_id, encode_uuid)),
-    #(
-      "meal_date",
-      json.string(
-        int.to_string(planned_meal.meal_date.year)
-        <> "-"
-        <> planned_meal.meal_date.month
-        |> int.to_string
-        |> string.pad_left(2, "0")
-        <> "-"
-        <> planned_meal.meal_date.date
-        |> int.to_string
-        |> string.pad_left(2, "0"),
-      ),
-    ),
+    #("meal_date", json.string(day.to_json_string(planned_meal.meal_date))),
     #("meal_type", json.string(meal_type.to_string(planned_meal.meal_type))),
     #("servings", json.int(planned_meal.servings)),
+  ])
+}
+
+pub fn encode_aggregated_shopping_list_item(
+  item: AggregatedShoppingListItem,
+) -> Json {
+  json.object([
+    #("ids", json.array(item.ids, encode_uuid)),
+    #("user_id", encode_uuid(item.user_id)),
+    #("name", json.string(item.name)),
+    #(
+      "unit",
+      json.nullable(item.unit |> option.map(unit_type.to_string), json.string),
+    ),
+    #(
+      "unit_family",
+      json.nullable(
+        item.unit_family |> option.map(unit_type_family.to_string),
+        json.string,
+      ),
+    ),
+    #("quantity", json.nullable(item.quantity, json.float)),
+    #(
+      "meal_date",
+      json.nullable(
+        item.meal_date |> option.map(day.to_json_string),
+        json.string,
+      ),
+    ),
+    #(
+      "week_day",
+      json.nullable(
+        item.week_day |> option.map(birl.weekday_to_string),
+        json.string,
+      ),
+    ),
+    #("checked", json.bool(item.checked)),
   ])
 }

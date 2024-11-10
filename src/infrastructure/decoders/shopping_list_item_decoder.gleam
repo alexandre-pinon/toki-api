@@ -70,7 +70,7 @@ pub fn from_domain_to_db(
 }
 
 pub fn from_db_to_domain(
-  ingredient_row: ShoppingListItemRow,
+  shopping_list_item_row: ShoppingListItemRow,
 ) -> Result(ShoppingListItem, DbError) {
   let ShoppingListItemRow(
     id,
@@ -82,7 +82,7 @@ pub fn from_db_to_domain(
     quantity,
     meal_date,
     checked,
-  ) = ingredient_row
+  ) = shopping_list_item_row
 
   use id <- result.try(common_decoder.from_db_uuid_to_domain_uuid(id))
   use user_id <- result.try(common_decoder.from_db_uuid_to_domain_uuid(user_id))

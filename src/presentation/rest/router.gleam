@@ -3,6 +3,7 @@ import gleam/http.{Delete, Get, Post, Put}
 import presentation/rest/controllers/auth_controller
 import presentation/rest/controllers/planned_meal_controller
 import presentation/rest/controllers/recipe_controller
+import presentation/rest/controllers/shopping_list_controller
 import presentation/rest/controllers/user_controller
 import wisp.{type Request, type Response}
 
@@ -24,8 +25,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["recipes"] -> handle_recipes(req, ctx)
     ["recipes", id] -> handle_recipe(req, ctx, id)
 
-    ["planned_meals"] -> handle_planned_meals(req, ctx)
-    ["planned_meals", id] -> handle_planned_meal(req, ctx, id)
+    ["planned-meals"] -> handle_planned_meals(req, ctx)
+    ["planned-meals", id] -> handle_planned_meal(req, ctx, id)
+
+    ["shopping-list"] -> handle_shopping_list(req, ctx)
 
     _ -> wisp.not_found()
   }
@@ -113,5 +116,12 @@ fn handle_planned_meal(req: Request, ctx: Context, id: String) -> Response {
     Put -> planned_meal_controller.update(req, ctx, id)
     Delete -> planned_meal_controller.delete(req, ctx, id)
     _ -> wisp.method_not_allowed([Put, Delete])
+  }
+}
+
+fn handle_shopping_list(req: Request, ctx: Context) -> Response {
+  case req.method {
+    Get -> shopping_list_controller.list(req, ctx)
+    _ -> wisp.method_not_allowed([Get])
   }
 }

@@ -195,7 +195,7 @@ CREATE VIEW public.aggregated_shopping_list AS
             shopping_list_items.meal_date,
             shopping_list_items.checked
            FROM public.shopping_list_items
-          WHERE ((shopping_list_items.meal_date IS NULL) OR (shopping_list_items.meal_date >= now()))
+          WHERE ((shopping_list_items.meal_date IS NULL) OR (shopping_list_items.meal_date >= CURRENT_DATE))
         ), weight_volume_items AS (
          SELECT array_agg(normalized_quantities.id) AS ids,
             normalized_quantities.user_id,

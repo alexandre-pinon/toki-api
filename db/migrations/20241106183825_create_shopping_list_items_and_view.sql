@@ -45,7 +45,7 @@ CREATE VIEW aggregated_shopping_list AS WITH normalized_quantities AS (
     shopping_list_items
   WHERE
     meal_date IS NULL
-    OR meal_date >= NOW()
+    OR meal_date >= CURRENT_DATE
 ),
 weight_volume_items AS (
   SELECT
