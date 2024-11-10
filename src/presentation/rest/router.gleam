@@ -20,7 +20,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["auth", "refresh"] -> handle_refresh(req, ctx)
 
     ["users"] -> handle_users(req, ctx)
-    ["users", id] -> handle_user(req, ctx, id)
+    ["users", "me"] -> handle_user_profile(req, ctx)
 
     ["recipes"] -> handle_recipes(req, ctx)
     ["recipes", id] -> handle_recipe(req, ctx, id)
@@ -77,17 +77,14 @@ fn handle_refresh(req: Request, ctx: Context) -> Response {
 fn handle_users(req: Request, ctx: Context) -> Response {
   case req.method {
     Get -> user_controller.list(ctx)
-    Post -> user_controller.create(req, ctx)
     _ -> wisp.method_not_allowed([Get, Post])
   }
 }
 
-fn handle_user(req: Request, ctx: Context, id: String) -> Response {
+fn handle_user_profile(req: Request, ctx: Context) -> Response {
   case req.method {
-    Get -> user_controller.show(ctx, id)
-    Put -> user_controller.update(req, ctx, id)
-    Delete -> user_controller.delete(ctx, id)
-    _ -> wisp.method_not_allowed([Get, Put, Delete])
+    Get -> user_controller.profile(req, ctx)
+    _ -> wisp.method_not_allowed([Get])
   }
 }
 

@@ -1,14 +1,13 @@
 import application/dto/auth_dto.{
   type LoginRequest, type RefreshAccessTokenRequest, type RegisterRequest,
-  GoogleIdTokenRequest, GoogleLoginRequest, GoogleRegisterRequest,
-  PasswordLoginRequest, PasswordRegisterRequest,
+  GoogleIdTokenRequest, GoogleLoginRequest, PasswordLoginRequest,
+  PasswordRegisterRequest,
 }
 import application/dto/ingredient_dto.{type IngredientUpsertRequest}
 import application/dto/instruction_dto.{type InstructionUpsertRequest}
 import application/dto/planned_meal_dto.{type PlannedMealUpsertRequest}
 import application/dto/recipe_details_dto.{type RecipeDetailsUpsertRequest}
 import application/dto/recipe_dto.{type RecipeUpsertRequest}
-import application/dto/user_dto.{type UserUpdateRequest}
 import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
@@ -79,30 +78,6 @@ pub fn decode_refresh_access_token_request(
   |> dynamic.decode1(
     auth_dto.RefreshAccessTokenRequest,
     dynamic.field("refresh_token", dynamic.string),
-  )
-}
-
-pub fn decode_google_register_request(
-  json: Dynamic,
-) -> Result(RegisterRequest, DecodeErrors) {
-  json
-  |> dynamic.decode3(
-    GoogleRegisterRequest,
-    dynamic.field("email", dynamic.string),
-    dynamic.field("name", dynamic.string),
-    dynamic.field("google_id", dynamic.string),
-  )
-}
-
-pub fn decode_user_update_request(
-  json: Dynamic,
-) -> Result(UserUpdateRequest, DecodeErrors) {
-  json
-  |> dynamic.decode3(
-    user_dto.UserUpdateRequest,
-    dynamic.optional_field("email", dynamic.string),
-    dynamic.optional_field("name", dynamic.string),
-    dynamic.optional_field("google_id", dynamic.string),
   )
 }
 
