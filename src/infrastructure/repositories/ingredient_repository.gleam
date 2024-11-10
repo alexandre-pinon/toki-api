@@ -9,7 +9,7 @@ import infrastructure/errors.{type DbError}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
-pub fn bulk_insert(
+pub fn bulk_create(
   ingredients: List(Ingredient),
   on pool: pgo.Connection,
 ) -> Result(List(Ingredient), DbError) {

@@ -5,11 +5,38 @@ import gleam/pgo
 import gleam/result
 import gleam/string
 import infrastructure/decoders/shopping_list_item_decoder
-import infrastructure/errors.{type DbError}
+import infrastructure/errors.{type DbError, EntityNotFound}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
-pub fn bulk_insert(
+pub fn upsert(
+  item: ShoppingListItem,
+  on pool: pgo.Connection,
+) -> Result(ShoppingListItem, DbError) {
+  let query_input = shopping_list_item_decoder.from_domain_to_db(item)
+
+  use query_result <- result.try(
+    "
+      INSERT INTO shopping_list_items (id, user_id, planned_meal_id, name, unit, unit_family, quantity, meal_date, checked, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, DEFAULT, NOW())
+      ON CONFLICT (id) DO UPDATE SET 
+        name = EXCLUDED.name,
+        unit = EXCLUDED.unit,
+        unit_family = EXCLUDED.unit_family,
+        quantity = EXCLUDED.quantity,
+        checked = EXCLUDED.checked,
+        updated_at = NOW()
+      RETURNING id, user_id, planned_meal_id, name, unit, unit_family, quantity, meal_date, checked
+    "
+    |> db.execute(pool, query_input, shopping_list_item_decoder.new()),
+  )
+
+  list.first(query_result.rows)
+  |> result.replace_error(EntityNotFound)
+  |> result.then(shopping_list_item_decoder.from_db_to_domain)
+}
+
+pub fn bulk_create(
   shopping_list_items: List(ShoppingListItem),
   on pool: pgo.Connection,
 ) -> Result(List(ShoppingListItem), DbError) {

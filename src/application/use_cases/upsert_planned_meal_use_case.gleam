@@ -124,7 +124,7 @@ fn upsert_shopping_list_items(
 
   recipe_details.ingredients
   |> list.map(to_shopping_list_item)
-  |> shopping_list_item_repository.bulk_insert(transaction)
+  |> shopping_list_item_repository.bulk_create(transaction)
   |> result.replace_error("bulk insert meal shopping list items failed")
   |> result.replace(planned_meal)
 }

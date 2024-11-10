@@ -65,7 +65,7 @@ fn upsert_recipe_details(
       |> result.replace_error("delete recipe ingredients failed"),
     )
     use ingredients <- result.try(
-      ingredient_repository.bulk_insert(
+      ingredient_repository.bulk_create(
         list.map(input.ingredients, ingredient_dto.to_entity(_, recipe.id)),
         transaction,
       )
@@ -77,7 +77,7 @@ fn upsert_recipe_details(
       |> result.replace_error("delete recipe instructions failed"),
     )
     use instructions <- result.try(
-      instruction_repository.bulk_insert(
+      instruction_repository.bulk_create(
         list.map(input.instructions, instruction_dto.to_entity(_, recipe.id)),
         transaction,
       )

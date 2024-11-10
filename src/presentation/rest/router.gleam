@@ -3,7 +3,7 @@ import gleam/http.{Delete, Get, Post, Put}
 import presentation/rest/controllers/auth_controller
 import presentation/rest/controllers/planned_meal_controller
 import presentation/rest/controllers/recipe_controller
-import presentation/rest/controllers/shopping_list_controller
+import presentation/rest/controllers/shopping_list_item_controller
 import presentation/rest/controllers/user_controller
 import wisp.{type Request, type Response}
 
@@ -28,7 +28,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["planned-meals"] -> handle_planned_meals(req, ctx)
     ["planned-meals", id] -> handle_planned_meal(req, ctx, id)
 
-    ["shopping-list"] -> handle_shopping_list(req, ctx)
+    ["shopping-list-item"] -> handle_shopping_list_items(req, ctx)
+    ["shopping-list-item", id] -> handle_shopping_list_item(req, ctx, id)
 
     _ -> wisp.not_found()
   }
@@ -119,9 +120,17 @@ fn handle_planned_meal(req: Request, ctx: Context, id: String) -> Response {
   }
 }
 
-fn handle_shopping_list(req: Request, ctx: Context) -> Response {
+fn handle_shopping_list_items(req: Request, ctx: Context) -> Response {
   case req.method {
-    Get -> shopping_list_controller.list(req, ctx)
-    _ -> wisp.method_not_allowed([Get])
+    Get -> shopping_list_item_controller.list(req, ctx)
+    Post -> shopping_list_item_controller.create(req, ctx)
+    _ -> wisp.method_not_allowed([Get, Post])
+  }
+}
+
+fn handle_shopping_list_item(req: Request, ctx: Context, id: String) -> Response {
+  case req.method {
+    Put -> shopping_list_item_controller.update(req, ctx, id)
+    _ -> wisp.method_not_allowed([Put])
   }
 }

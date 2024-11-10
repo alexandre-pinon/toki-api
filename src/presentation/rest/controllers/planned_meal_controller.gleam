@@ -1,13 +1,12 @@
 import application/context.{type Context, AuthContext}
-import application/dto/planned_meal_dto.{type PlannedMealUpsertRequest}
 import application/use_cases/upsert_planned_meal_use_case.{
   UpsertPlannedMealUseCasePort,
 }
 import birl.{type Day}
-import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
 import gleam/string
 import infrastructure/repositories/planned_meal_repository
+import presentation/rest/decoders
 import presentation/rest/encoders
 import presentation/rest/middlewares
 import wisp.{type Request, type Response}
@@ -38,7 +37,7 @@ pub fn create(req: Request, ctx: Context) -> Response {
   use auth_ctx <- middlewares.require_auth(req, ctx)
   use json <- wisp.require_json(req)
 
-  case decode_planned_meal_upsert_request(json) {
+  case decoders.decode_planned_meal_upsert_request(json) {
     Ok(decoded) -> {
       case
         upsert_planned_meal_use_case.execute(
@@ -72,7 +71,7 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   use planned_meal_id <- middlewares.require_uuid(id)
   use json <- wisp.require_json(req)
 
-  case decode_planned_meal_upsert_request(json) {
+  case decoders.decode_planned_meal_upsert_request(json) {
     Ok(decoded) -> {
       case
         upsert_planned_meal_use_case.execute(
@@ -126,17 +125,4 @@ fn parse_timestamp_as_date(
       wisp.bad_request()
     }
   }
-}
-
-fn decode_planned_meal_upsert_request(
-  json: Dynamic,
-) -> Result(PlannedMealUpsertRequest, DecodeErrors) {
-  json
-  |> dynamic.decode4(
-    planned_meal_dto.PlannedMealUpsertRequest,
-    dynamic.field("recipe_id", dynamic.string),
-    dynamic.field("meal_date", dynamic.string),
-    dynamic.field("meal_type", dynamic.string),
-    dynamic.field("servings", dynamic.int),
-  )
 }

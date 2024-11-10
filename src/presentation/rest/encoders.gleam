@@ -2,11 +2,13 @@ import birl
 import domain/entities/aggregated_shopping_list_item.{
   type AggregatedShoppingListItem,
 }
+
 import domain/entities/ingredient.{type Ingredient}
 import domain/entities/instruction.{type Instruction}
 import domain/entities/planned_meal.{type PlannedMeal}
 import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
+import domain/entities/shopping_list_item.{type ShoppingListItem}
 import domain/entities/user.{type User}
 import domain/value_objects/cuisine_type
 import domain/value_objects/day
@@ -102,6 +104,27 @@ pub fn encode_planned_meal(planned_meal: PlannedMeal) -> Json {
     #("meal_date", json.string(day.to_json_string(planned_meal.meal_date))),
     #("meal_type", json.string(meal_type.to_string(planned_meal.meal_type))),
     #("servings", json.int(planned_meal.servings)),
+  ])
+}
+
+pub fn encode_shopping_list_item(item: ShoppingListItem) -> Json {
+  json.object([
+    #("id", encode_uuid(item.id)),
+    #("user_id", encode_uuid(item.user_id)),
+    #("name", json.string(item.name)),
+    #(
+      "unit",
+      json.nullable(item.unit |> option.map(unit_type.to_string), json.string),
+    ),
+    #(
+      "unit_family",
+      json.nullable(
+        item.unit_family |> option.map(unit_type_family.to_string),
+        json.string,
+      ),
+    ),
+    #("quantity", json.nullable(item.quantity, json.float)),
+    #("checked", json.bool(item.checked)),
   ])
 }
 

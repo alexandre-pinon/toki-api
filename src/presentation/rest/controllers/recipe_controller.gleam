@@ -1,14 +1,10 @@
 import application/context.{type Context, AuthContext}
-import application/dto/ingredient_dto.{type IngredientUpsertRequest}
-import application/dto/instruction_dto.{type InstructionUpsertRequest}
-import application/dto/recipe_details_dto.{type RecipeDetailsUpsertRequest}
-import application/dto/recipe_dto.{type RecipeUpsertRequest}
 import application/use_cases/upsert_recipe_use_case.{UpsertRecipeUseCasePort}
-import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
 import infrastructure/repositories/recipe_repository
+import presentation/rest/decoders
 import presentation/rest/encoders
 import presentation/rest/middlewares
 import wisp.{type Request, type Response}
@@ -50,7 +46,7 @@ pub fn create(req: Request, ctx: Context) -> Response {
   use auth_ctx <- middlewares.require_auth(req, ctx)
   use json <- wisp.require_json(req)
 
-  case decode_recipe_details_upsert_request(json) {
+  case decoders.decode_recipe_details_upsert_request(json) {
     Ok(decoded) -> {
       case
         upsert_recipe_use_case.execute(
@@ -84,7 +80,7 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   use recipe_id <- middlewares.require_uuid(id)
   use json <- wisp.require_json(req)
 
-  case decode_recipe_details_upsert_request(json) {
+  case decoders.decode_recipe_details_upsert_request(json) {
     Ok(decoded) -> {
       case
         upsert_recipe_use_case.execute(
@@ -125,59 +121,4 @@ pub fn delete(req: Request, ctx: Context, id: String) -> Response {
       wisp.internal_server_error()
     }
   }
-}
-
-fn decode_recipe_details_upsert_request(
-  json: Dynamic,
-) -> Result(RecipeDetailsUpsertRequest, DecodeErrors) {
-  json
-  |> dynamic.decode3(
-    recipe_details_dto.RecipeDetailsUpsertRequest,
-    dynamic.field("recipe", decode_recipe_upsert_request),
-    dynamic.field("ingredients", dynamic.list(decode_ingredient_upsert_request)),
-    dynamic.field(
-      "instructions",
-      dynamic.list(decode_instruction_upsert_request),
-    ),
-  )
-}
-
-fn decode_recipe_upsert_request(
-  json: Dynamic,
-) -> Result(RecipeUpsertRequest, DecodeErrors) {
-  json
-  |> dynamic.decode8(
-    recipe_dto.RecipeUpsertRequest,
-    dynamic.field("title", dynamic.string),
-    dynamic.field("prep_time", dynamic.optional(dynamic.int)),
-    dynamic.field("cook_time", dynamic.optional(dynamic.int)),
-    dynamic.field("servings", dynamic.int),
-    dynamic.field("source_url", dynamic.optional(dynamic.string)),
-    dynamic.field("image_url", dynamic.optional(dynamic.string)),
-    dynamic.field("cuisine_type", dynamic.optional(dynamic.string)),
-    dynamic.field("rating", dynamic.optional(dynamic.int)),
-  )
-}
-
-fn decode_ingredient_upsert_request(
-  json: Dynamic,
-) -> Result(IngredientUpsertRequest, DecodeErrors) {
-  json
-  |> dynamic.decode3(
-    ingredient_dto.IngredientUpsertRequest,
-    dynamic.field("name", dynamic.string),
-    dynamic.field("quantity", dynamic.optional(dynamic.float)),
-    dynamic.field("unit", dynamic.optional(dynamic.string)),
-  )
-}
-
-fn decode_instruction_upsert_request(
-  json: Dynamic,
-) -> Result(InstructionUpsertRequest, DecodeErrors) {
-  json
-  |> dynamic.decode2(
-    instruction_dto.InstructionUpsertRequest,
-    dynamic.field("step_number", dynamic.int),
-    dynamic.field("instruction", dynamic.string),
-  )
 }

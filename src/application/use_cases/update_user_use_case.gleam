@@ -17,7 +17,7 @@ type UpdateUserUseCaseResult =
 
 pub type UpdateUserUseCaseErrors {
   ValidationFailed(NonEmptyList(String))
-  InsertFailed(DbError)
+  QueryFailed(DbError)
   EmailAlreadyExists
   UserNotFound
 }
@@ -33,7 +33,7 @@ pub fn execute(
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)
     Error(EntityNotFound) -> Error(UserNotFound)
-    Error(error) -> Error(InsertFailed(error))
+    Error(error) -> Error(QueryFailed(error))
   }
 }
 

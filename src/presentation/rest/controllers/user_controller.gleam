@@ -1,8 +1,6 @@
 import application/context.{type Context}
-import application/dto/user_dto.{type UserUpdateRequest}
 import application/use_cases/register_user_use_case
 import application/use_cases/update_user_use_case.{UpdateUserUseCasePort}
-import gleam/dynamic.{type DecodeErrors, type Dynamic}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
@@ -71,7 +69,7 @@ pub fn update(req: Request, ctx: Context, id: String) -> Response {
   use user_id <- middlewares.require_uuid(id)
   use json <- wisp.require_json(req)
 
-  case decode_user_update_request(json) {
+  case decoders.decode_user_update_request(json) {
     Ok(decoded) -> {
       let port = UpdateUserUseCasePort(user_id, decoded)
 
@@ -108,16 +106,4 @@ pub fn delete(ctx: Context, id: String) -> Response {
       wisp.internal_server_error()
     }
   }
-}
-
-fn decode_user_update_request(
-  json: Dynamic,
-) -> Result(UserUpdateRequest, DecodeErrors) {
-  json
-  |> dynamic.decode3(
-    user_dto.UserUpdateRequest,
-    dynamic.optional_field("email", dynamic.string),
-    dynamic.optional_field("name", dynamic.string),
-    dynamic.optional_field("google_id", dynamic.string),
-  )
 }

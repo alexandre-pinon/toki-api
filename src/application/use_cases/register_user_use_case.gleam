@@ -21,7 +21,7 @@ type RegisterUserUseCaseResult =
 
 pub type RegisterUserUseCaseErrors {
   ValidationFailed(NonEmptyList(String))
-  InsertFailed(DbError)
+  QueryFailed(DbError)
   EmailAlreadyExists
   PasswordHashFailed(reason: String)
 }
@@ -56,7 +56,7 @@ pub fn execute(
     Ok(user) -> Ok(user)
     Error(ExecutionFailed(ConstraintViolated(_, "users_email_key", _))) ->
       Error(EmailAlreadyExists)
-    Error(error) -> Error(InsertFailed(error))
+    Error(error) -> Error(QueryFailed(error))
   }
 }
 
