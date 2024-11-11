@@ -33,6 +33,19 @@ pub fn disconnect(db: pgo.Connection) -> Nil {
   pgo.disconnect(db)
 }
 
+pub fn check_connection(pool: pgo.Connection) -> Result(Nil, pgo.QueryError) {
+  case pgo.execute("SELECT 1;", pool, [], dynamic.dynamic) {
+    Ok(_) -> {
+      wisp.log_info("✅ Database connection successful")
+      Ok(Nil)
+    }
+    Error(error) -> {
+      wisp.log_critical("❌ Database connection failed")
+      Error(error)
+    }
+  }
+}
+
 pub fn execute(
   query sql: String,
   on pool: pgo.Connection,

@@ -2,12 +2,11 @@ import dot_env/env
 import gleam/result
 
 pub type Env {
-  Env(
-    app_name: String,
-    port: Int,
-    db_config: DbConfig,
-    token_config: TokenConfig,
-  )
+  Env(api_config: ApiConfig, db_config: DbConfig, token_config: TokenConfig)
+}
+
+pub type ApiConfig {
+  ApiConfig(port: Int, host: String, name: String)
 }
 
 pub type DbConfig {
@@ -31,12 +30,19 @@ pub type TokenConfig {
 }
 
 pub fn load() -> Result(Env, String) {
-  use app_name <- env.get_then("APP_NAME")
-  use port <- result.try(env.get_int("PORT"))
+  use api_config <- result.try(loag_api_config())
   use db_config <- result.try(load_db_config())
   use token_config <- result.try(load_token_config())
 
-  Ok(Env(app_name, port, db_config, token_config))
+  Ok(Env(api_config, db_config, token_config))
+}
+
+fn loag_api_config() -> Result(ApiConfig, String) {
+  use port <- result.try(env.get_int("API_PORT"))
+  use host <- env.get_then("API_HOST")
+  use name <- env.get_then("API_NAME")
+
+  Ok(ApiConfig(port, host, name))
 }
 
 fn load_db_config() -> Result(DbConfig, String) {

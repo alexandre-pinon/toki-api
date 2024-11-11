@@ -1,9 +1,10 @@
 import app_logger
 import application/context.{Context}
 import dot_env
-import env
+import env.{ApiConfig}
 import gleam/erlang/process
 import gleam/int
+import gleam/pgo
 import gleam/result
 import gleam/string
 import infrastructure/postgres/db
@@ -33,23 +34,28 @@ pub fn main() -> Nil {
 type InitError {
   EnvError(msg: String)
   ServerStartError
+  DbConnectionError(pgo.QueryError)
 }
 
 fn start_server() -> Result(Nil, InitError) {
   use env <- result.try(env.load() |> result.map_error(EnvError))
+  let ApiConfig(port, host, app_name) = env.api_config
 
-  wisp.log_info(
-    "Starting " <> env.app_name <> " on port: " <> int.to_string(env.port),
-  )
+  wisp.log_info("Starting " <> app_name <> " on port: " <> int.to_string(port))
 
   let pool = db.connect(env.db_config)
+  use _ <- result.try(
+    db.check_connection(pool) |> result.map_error(DbConnectionError),
+  )
+
   let ctx =
-    Context(app_name: env.app_name, pool: pool, token_config: env.token_config)
+    Context(app_name: app_name, pool: pool, token_config: env.token_config)
   let handler = router.handle_request(_, ctx)
 
   wisp_mist.handler(handler, "SECRET_KEY_BASE")
   |> mist.new
-  |> mist.port(env.port)
+  |> mist.port(port)
+  |> mist.bind(host)
   |> mist.start_http
   |> result.map_error(app_logger.log_error)
   |> result.replace_error(ServerStartError)

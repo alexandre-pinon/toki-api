@@ -1,6 +1,26 @@
 version: "3.9"
 
 services:
+  api:
+    build: .
+    container_name: toki_api
+    environment:
+      - API_NAME=toki-api
+      - API_PORT=3000
+      - API_HOST=0.0.0.0
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=toki
+      - DB_USER=toki
+      - DB_PASSWORD=toki
+      - JWT_SECRET_KEY=toki
+      - JWT_EXPIRES_IN=86400
+      - REFRESH_TOKEN_PEPPER=toki
+      - REFRESH_TOKEN_EXPIRES_IN=2592000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
   db:
     image: postgres:17.0
     container_name: toki_db
