@@ -3,10 +3,10 @@ steps:
     args:
       - "build"
       - "-t"
-      - "$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA"
+      - "$LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA"
       - "."
 
-images: ["$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA"]
+images: ["$LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA"]
 
 options:
   logging: CLOUD_LOGGING_ONLY
