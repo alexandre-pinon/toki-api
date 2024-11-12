@@ -69,3 +69,7 @@ Dockerfile
 \*.log
 logs/
 tmp/
+
+# Scipts
+
+scripts/

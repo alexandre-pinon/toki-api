@@ -11,7 +11,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   use <- wisp.log_request(req)
 
   case wisp.path_segments(req) {
-    ["/"] -> wisp.ok()
+    [] -> wisp.ok()
 
     ["auth", "register"] -> handle_register(req, ctx)
     ["auth", "login"] -> handle_login(req, ctx)
