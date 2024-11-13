@@ -43,7 +43,7 @@ fn start_server() -> Result(Nil, InitError) {
 
   wisp.log_info("Starting " <> app_name <> " on port: " <> int.to_string(port))
 
-  let pool = db.connect(env.db_config)
+  let pool = db.connect(env.gleam_env, env.db_config)
   use _ <- result.try(
     db.check_connection(pool) |> result.map_error(DbConnectionError),
   )

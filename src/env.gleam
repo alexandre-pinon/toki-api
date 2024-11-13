@@ -2,7 +2,17 @@ import dot_env/env
 import gleam/result
 
 pub type Env {
-  Env(api_config: ApiConfig, db_config: DbConfig, token_config: TokenConfig)
+  Env(
+    gleam_env: GleamEnv,
+    api_config: ApiConfig,
+    db_config: DbConfig,
+    token_config: TokenConfig,
+  )
+}
+
+pub type GleamEnv {
+  Dev
+  Prod
 }
 
 pub type ApiConfig {
@@ -30,14 +40,25 @@ pub type TokenConfig {
 }
 
 pub fn load() -> Result(Env, String) {
-  use api_config <- result.try(loag_api_config())
+  use gleam_env <- result.try(load_gleam_env())
+  use api_config <- result.try(load_api_config())
   use db_config <- result.try(load_db_config())
   use token_config <- result.try(load_token_config())
 
-  Ok(Env(api_config, db_config, token_config))
+  Ok(Env(gleam_env, api_config, db_config, token_config))
 }
 
-fn loag_api_config() -> Result(ApiConfig, String) {
+fn load_gleam_env() -> Result(GleamEnv, String) {
+  use gleam_env <- env.get_then("GLEAM_ENV")
+
+  case gleam_env {
+    "dev" -> Ok(Dev)
+    "prod" -> Ok(Prod)
+    _ -> Error("key GLEAM_ENV is not set or incorrect")
+  }
+}
+
+fn load_api_config() -> Result(ApiConfig, String) {
   use port <- result.try(env.get_int("API_PORT"))
   use host <- env.get_then("API_HOST")
   use name <- env.get_then("API_NAME")

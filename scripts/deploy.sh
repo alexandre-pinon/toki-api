@@ -22,7 +22,8 @@ gcloud run deploy ${SERVICE_NAME} \
   --max-instances=2 \
   --labels="git-sha=${GIT_SHA},app=toki-api" \
   --service-account="toki-api-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --set-env-vars="API_NAME=toki-api,\
+  --set-env-vars="GLEAM_ENV=prod,\
+                  API_NAME=toki-api,\
                   API_PORT=3000,\
                   API_HOST=0.0.0.0,\
                   DB_PORT=5432,\

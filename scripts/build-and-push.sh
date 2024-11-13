@@ -9,7 +9,7 @@ IMAGE_PATH="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:$
 
 gcloud auth configure-docker ${REGION}-docker.pkg.dev
 
-docker build -t ${IMAGE_PATH} .
+docker build -t ${IMAGE_PATH} --platform linux/amd64 .
 
 docker push ${IMAGE_PATH}
 

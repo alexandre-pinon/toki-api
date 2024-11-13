@@ -5,6 +5,7 @@ services:
     build: .
     container_name: toki_api
     environment:
+      - GLEAM_ENV=dev
       - API_NAME=toki-api
       - API_PORT=3000
       - API_HOST=0.0.0.0

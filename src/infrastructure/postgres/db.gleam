@@ -1,5 +1,5 @@
 import app_logger
-import env.{type DbConfig}
+import env.{type DbConfig, type GleamEnv, Dev, Prod}
 import gleam/dynamic
 import gleam/int
 import gleam/list
@@ -13,7 +13,7 @@ import wisp
 pub type Transactional(a) =
   fn(pgo.Connection) -> a
 
-pub fn connect(db_config: DbConfig) -> pgo.Connection {
+pub fn connect(gleam_env: GleamEnv, db_config: DbConfig) -> pgo.Connection {
   pgo.connect(
     pgo.Config(
       ..pgo.default_config(),
@@ -25,6 +25,10 @@ pub fn connect(db_config: DbConfig) -> pgo.Connection {
       pool_size: db_config.pool_size,
       trace: True,
       rows_as_map: True,
+      ssl: case gleam_env {
+        Dev -> False
+        Prod -> True
+      },
     ),
   )
 }
