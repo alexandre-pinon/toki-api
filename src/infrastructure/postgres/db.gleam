@@ -14,23 +14,22 @@ pub type Transactional(a) =
   fn(pgo.Connection) -> a
 
 pub fn connect(gleam_env: GleamEnv, db_config: DbConfig) -> pgo.Connection {
-  pgo.connect(
-    pgo.Config(
-      ..pgo.default_config(),
-      port: db_config.port,
-      host: db_config.host,
-      database: db_config.database,
-      user: db_config.user,
-      password: Some(db_config.password),
-      pool_size: db_config.pool_size,
-      trace: True,
-      rows_as_map: True,
-      ssl: case gleam_env {
-        Dev -> False
-        Prod -> True
-      },
-    ),
+  pgo.Config(
+    ..pgo.default_config(),
+    port: db_config.port,
+    host: db_config.host,
+    database: db_config.database,
+    user: db_config.user,
+    password: Some(db_config.password),
+    pool_size: db_config.pool_size,
+    trace: True,
+    rows_as_map: True,
+    ssl: case gleam_env {
+      Dev -> False
+      Prod -> True
+    },
   )
+  |> pgo.connect
 }
 
 pub fn disconnect(db: pgo.Connection) -> Nil {

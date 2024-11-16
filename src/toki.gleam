@@ -1,7 +1,9 @@
 import app_logger
 import application/context.{Context}
 import dot_env
-import env.{ApiConfig}
+import env.{ApiConfig, Dev, Prod}
+import gleam/erlang.{type EnsureAllStartedError}
+import gleam/erlang/atom
 import gleam/erlang/process
 import gleam/int
 import gleam/pgo
@@ -35,6 +37,7 @@ type InitError {
   EnvError(msg: String)
   ServerStartError
   DbConnectionError(pgo.QueryError)
+  SslError(EnsureAllStartedError)
 }
 
 fn start_server() -> Result(Nil, InitError) {
@@ -42,6 +45,11 @@ fn start_server() -> Result(Nil, InitError) {
   let ApiConfig(port, host, app_name) = env.api_config
 
   wisp.log_info("Starting " <> app_name <> " on port: " <> int.to_string(port))
+
+  use _ <- result.try(case env.gleam_env {
+    Dev -> Ok(Nil)
+    Prod -> start_ssl()
+  })
 
   let pool = db.connect(env.gleam_env, env.db_config)
   use _ <- result.try(
@@ -52,6 +60,7 @@ fn start_server() -> Result(Nil, InitError) {
     Context(app_name: app_name, pool: pool, token_config: env.token_config)
   let handler = router.handle_request(_, ctx)
 
+  //TODO: use env for secret key
   wisp_mist.handler(handler, "SECRET_KEY_BASE")
   |> mist.new
   |> mist.port(port)
@@ -60,4 +69,13 @@ fn start_server() -> Result(Nil, InitError) {
   |> result.map_error(app_logger.log_error)
   |> result.replace_error(ServerStartError)
   |> result.replace(Nil)
+}
+
+fn start_ssl() -> Result(Nil, InitError) {
+  let ssl_started = atom.create_from_string("ssl") |> erlang.ensure_all_started
+
+  case ssl_started {
+    Ok(_) -> Ok(Nil)
+    Error(error) -> Error(SslError(error))
+  }
 }
