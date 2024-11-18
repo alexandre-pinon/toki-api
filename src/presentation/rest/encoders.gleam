@@ -8,6 +8,9 @@ import domain/entities/instruction.{type Instruction}
 import domain/entities/planned_meal.{type PlannedMeal}
 import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
+import domain/entities/scraped_recipe.{
+  type ScrapedIngredient, type ScrapedInstruction, type ScrapedRecipe,
+}
 import domain/entities/shopping_list_item.{type ShoppingListItem}
 import domain/entities/user.{type User}
 import domain/value_objects/cuisine_type
@@ -93,6 +96,46 @@ pub fn encode_recipe_details(recipe_details: RecipeDetails) -> Json {
       "instructions",
       json.array(recipe_details.instructions, encode_instruction),
     ),
+  ])
+}
+
+pub fn encode_scraped_recipe(scraped_recipe: ScrapedRecipe) -> Json {
+  json.object([
+    #("title", json.nullable(scraped_recipe.title, json.string)),
+    #("prep_time", json.nullable(scraped_recipe.prep_time, json.int)),
+    #("cook_time", json.nullable(scraped_recipe.cook_time, json.int)),
+    #("servings", json.nullable(scraped_recipe.servings, json.int)),
+    #("source_url", json.nullable(scraped_recipe.source_url, json.string)),
+    #("image_url", json.nullable(scraped_recipe.image_url, json.string)),
+    #(
+      "ingredients",
+      scraped_recipe.ingredients |> json.array(encode_scraped_ingredient),
+    ),
+    #(
+      "instructions",
+      scraped_recipe.instructions |> json.array(encode_scraped_instruction),
+    ),
+  ])
+}
+
+fn encode_scraped_ingredient(scraped_ingredient: ScrapedIngredient) -> Json {
+  json.object([
+    #("name", json.string(scraped_ingredient.name)),
+    #("quantity", json.nullable(scraped_ingredient.quantity, json.float)),
+    #(
+      "unit",
+      json.nullable(
+        scraped_ingredient.unit |> option.map(unit_type.to_string),
+        json.string,
+      ),
+    ),
+  ])
+}
+
+fn encode_scraped_instruction(scraped_instruction: ScrapedInstruction) -> Json {
+  json.object([
+    #("step_number", json.int(scraped_instruction.step_number)),
+    #("instruction", json.string(scraped_instruction.instruction)),
   ])
 }
 

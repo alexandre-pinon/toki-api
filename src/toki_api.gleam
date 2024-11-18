@@ -57,7 +57,13 @@ fn start_server() -> Result(Nil, InitError) {
   )
 
   let ctx =
-    Context(app_name: app_name, pool: pool, token_config: env.token_config)
+    Context(
+      gleam_env: env.gleam_env,
+      app_name: app_name,
+      pool: pool,
+      token_config: env.token_config,
+      recipe_scraper_config: env.recipe_scraper_config,
+    )
   let handler = router.handle_request(_, ctx)
 
   //TODO: use env for secret key

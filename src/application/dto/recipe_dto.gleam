@@ -18,6 +18,10 @@ pub type RecipeUpsertRequest {
   )
 }
 
+pub type ImportRecipeRequest {
+  ImportRecipeRequest(url: String)
+}
+
 pub type RecipeUpsertInput {
   RecipeUpsertInput(
     title: String,

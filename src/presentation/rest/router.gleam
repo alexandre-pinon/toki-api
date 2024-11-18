@@ -23,6 +23,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["users", "me"] -> handle_user_profile(req, ctx)
 
     ["recipes"] -> handle_recipes(req, ctx)
+    ["recipes", "import"] -> handle_recipe_import(req, ctx)
     ["recipes", id] -> handle_recipe(req, ctx, id)
 
     ["planned-meals"] -> handle_planned_meals(req, ctx)
@@ -103,6 +104,13 @@ fn handle_recipe(req: Request, ctx: Context, id: String) -> Response {
     Put -> recipe_controller.update(req, ctx, id)
     Delete -> recipe_controller.delete(req, ctx, id)
     _ -> wisp.method_not_allowed([Get, Put, Delete])
+  }
+}
+
+fn handle_recipe_import(req: Request, ctx: Context) -> Response {
+  case req.method {
+    Post -> recipe_controller.import_from_url(req, ctx)
+    _ -> wisp.method_not_allowed([Post])
   }
 }
 

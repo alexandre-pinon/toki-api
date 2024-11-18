@@ -9,7 +9,9 @@ import application/dto/ingredient_dto.{type IngredientUpsertRequest}
 import application/dto/instruction_dto.{type InstructionUpsertRequest}
 import application/dto/planned_meal_dto.{type PlannedMealUpsertRequest}
 import application/dto/recipe_details_dto.{type RecipeDetailsUpsertRequest}
-import application/dto/recipe_dto.{type RecipeUpsertRequest}
+import application/dto/recipe_dto.{
+  type ImportRecipeRequest, type RecipeUpsertRequest,
+}
 import application/dto/user_dto.{type UserUpdateRequest}
 import gleam/bit_array
 import gleam/dynamic.{type DecodeErrors, type Dynamic}
@@ -161,5 +163,15 @@ pub fn decode_planned_meal_upsert_request(
     dynamic.field("meal_date", dynamic.string),
     dynamic.field("meal_type", dynamic.string),
     dynamic.field("servings", dynamic.int),
+  )
+}
+
+pub fn decode_import_recipe_request(
+  json: Dynamic,
+) -> Result(ImportRecipeRequest, DecodeErrors) {
+  json
+  |> dynamic.decode1(
+    recipe_dto.ImportRecipeRequest,
+    dynamic.field("url", dynamic.string),
   )
 }

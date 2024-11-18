@@ -3,7 +3,13 @@ import gleam/pgo
 import youid/uuid.{type Uuid}
 
 pub type Context {
-  Context(app_name: String, pool: pgo.Connection, token_config: env.TokenConfig)
+  Context(
+    gleam_env: env.GleamEnv,
+    app_name: String,
+    pool: pgo.Connection,
+    token_config: env.TokenConfig,
+    recipe_scraper_config: env.RecipeScraperConfig,
+  )
 }
 
 pub type AuthContext {
