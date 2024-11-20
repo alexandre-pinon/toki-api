@@ -31,7 +31,9 @@ gcloud run deploy ${SERVICE_NAME} \
                   DB_NAME=toki-prod,\
                   DB_USER=toki-prod,\
                   JWT_EXPIRES_IN=900,\
-                  REFRESH_TOKEN_EXPIRES_IN=2592000" \
+                  REFRESH_TOKEN_EXPIRES_IN=2592000, \
+                  RECIPE_SCRAPER_PORT=8080, \
+                  RECIPE_SCRAPER_HOST=toki-scraper-876817290985.europe-west9.run.app" \
   --set-secrets="DB_PASSWORD=DB_PASSWORD:latest,\
                  JWT_SECRET_KEY=JWT_SECRET_KEY:latest,\
                  REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest"
