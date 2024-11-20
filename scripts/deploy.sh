@@ -36,7 +36,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-secrets="DB_PASSWORD=DB_PASSWORD:latest,\
                  JWT_SECRET_KEY=JWT_SECRET_KEY:latest,\
                  REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest,\
-                 SERVICE_ACCOUNT_IDENTITY_TOKEN:latest"
+                 SERVICE_ACCOUNT_IDENTITY_TOKEN=SERVICE_ACCOUNT_IDENTITY_TOKEN:latest"
 
 # Verify deployment
 echo "Verifying deployment..."
