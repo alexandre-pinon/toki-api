@@ -7,7 +7,7 @@ pub type Env {
     api_config: ApiConfig,
     db_config: DbConfig,
     token_config: TokenConfig,
-    recipe_scraper_config: RecipeScraperConfig,
+    recipe_scraper_url: String,
   )
 }
 
@@ -40,18 +40,14 @@ pub type TokenConfig {
   )
 }
 
-pub type RecipeScraperConfig {
-  RecipeScraperConfig(port: Int, host: String)
-}
-
 pub fn load() -> Result(Env, String) {
   use gleam_env <- result.try(load_gleam_env())
   use api_config <- result.try(load_api_config())
   use db_config <- result.try(load_db_config())
   use token_config <- result.try(load_token_config())
-  use recipe_scraper_config <- result.try(load_recipe_scraper_config())
+  use recipe_scraper_url <- env.get_then("RECIPE_SCRAPER_URL")
 
-  Ok(Env(gleam_env, api_config, db_config, token_config, recipe_scraper_config))
+  Ok(Env(gleam_env, api_config, db_config, token_config, recipe_scraper_url))
 }
 
 fn load_gleam_env() -> Result(GleamEnv, String) {
@@ -98,11 +94,4 @@ fn load_token_config() -> Result(TokenConfig, String) {
     refresh_token_pepper,
     refresh_token_expires_in,
   ))
-}
-
-fn load_recipe_scraper_config() -> Result(RecipeScraperConfig, String) {
-  use port <- result.try(env.get_int("RECIPE_SCRAPER_PORT"))
-  use host <- env.get_then("RECIPE_SCRAPER_HOST")
-
-  Ok(RecipeScraperConfig(port, host))
 }

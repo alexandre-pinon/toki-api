@@ -62,7 +62,7 @@ fn start_server() -> Result(Nil, InitError) {
       app_name: app_name,
       pool: pool,
       token_config: env.token_config,
-      recipe_scraper_config: env.recipe_scraper_config,
+      recipe_scraper_url: env.recipe_scraper_url,
     )
   let handler = router.handle_request(_, ctx)
 

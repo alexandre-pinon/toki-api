@@ -133,8 +133,7 @@ pub fn import_from_url(req: Request, ctx: Context) -> Response {
       case
         scraped_recipe_repository.scrape_recipe(
           decoded.url,
-          ctx.recipe_scraper_config,
-          ctx.gleam_env,
+          ctx.recipe_scraper_url,
         )
       {
         Ok(scraped_recipe) ->

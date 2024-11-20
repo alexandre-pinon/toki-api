@@ -1,33 +1,31 @@
 import domain/entities/scraped_recipe.{type ScrapedRecipe}
-import env.{type RecipeScraperConfig, Dev, Prod}
 import gleam/bool
 import gleam/http
 import gleam/http/request
 import gleam/httpc
 import gleam/json
 import gleam/result
+import gleam/uri
 import infrastructure/decoders/scraped_recipe_decoder
 import infrastructure/errors.{
-  type RequestError, BodyDecodingFailed, HttpError, WebsiteNotSupported,
+  type RequestError, BodyDecodingFailed, HttpError, InvalidUrl,
+  WebsiteNotSupported,
 }
 
 pub fn scrape_recipe(
   url: String,
-  using recipe_scraper_config: RecipeScraperConfig,
-  given gleam_env: env.GleamEnv,
+  on recipe_scraper_url: String,
 ) -> Result(ScrapedRecipe, RequestError) {
+  use req <- result.try(
+    uri.parse(recipe_scraper_url)
+    |> result.map(request.from_uri)
+    |> result.flatten
+    |> result.replace_error(InvalidUrl(recipe_scraper_url)),
+  )
+
   let req =
-    request.new()
+    req
     |> request.set_method(http.Post)
-    |> request.set_port(recipe_scraper_config.port)
-    |> request.set_host(recipe_scraper_config.host)
-    |> request.set_path("/scrape_recipe")
-    |> request.set_scheme({
-      case gleam_env {
-        Dev -> http.Http
-        Prod -> http.Https
-      }
-    })
     |> request.set_header("Content-type", "application/json")
     |> request.set_body(
       [#("url", json.string(url))]

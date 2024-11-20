@@ -8,7 +8,7 @@ pub type Context {
     app_name: String,
     pool: pgo.Connection,
     token_config: env.TokenConfig,
-    recipe_scraper_config: env.RecipeScraperConfig,
+    recipe_scraper_url: String,
   )
 }
 

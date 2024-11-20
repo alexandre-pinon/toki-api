@@ -10,6 +10,7 @@ pub type DbError {
 }
 
 pub type RequestError {
+  InvalidUrl(url: String)
   HttpError(reason: Dynamic)
   BodyDecodingFailed(json.DecodeError)
   WebsiteNotSupported(url: String)
