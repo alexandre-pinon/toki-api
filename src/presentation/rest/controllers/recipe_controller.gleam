@@ -134,6 +134,7 @@ pub fn import_from_url(req: Request, ctx: Context) -> Response {
         scraped_recipe_repository.scrape_recipe(
           decoded.url,
           ctx.recipe_scraper_url,
+          ctx.identity_token,
         )
       {
         Ok(scraped_recipe) ->

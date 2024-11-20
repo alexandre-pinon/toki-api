@@ -1,9 +1,10 @@
 import domain/entities/scraped_recipe.{type ScrapedRecipe}
 import gleam/bool
 import gleam/http
-import gleam/http/request
+import gleam/http/request.{type Request}
 import gleam/httpc
 import gleam/json
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/uri
 import infrastructure/decoders/scraped_recipe_decoder
@@ -15,6 +16,7 @@ import infrastructure/errors.{
 pub fn scrape_recipe(
   url: String,
   on recipe_scraper_url: String,
+  with identity_token: Option(String),
 ) -> Result(ScrapedRecipe, RequestError) {
   use req <- result.try(
     uri.parse(recipe_scraper_url)
@@ -27,6 +29,7 @@ pub fn scrape_recipe(
     req
     |> request.set_method(http.Post)
     |> request.set_header("Content-type", "application/json")
+    |> set_auth_header_if_needed(identity_token)
     |> request.set_body(
       [#("url", json.string(url))]
       |> json.object
@@ -41,4 +44,15 @@ pub fn scrape_recipe(
   |> json.decode(scraped_recipe_decoder.new())
   |> result.map(scraped_recipe_decoder.from_raw_to_domain)
   |> result.map_error(BodyDecodingFailed)
+}
+
+fn set_auth_header_if_needed(
+  req: Request(body),
+  identity_token: Option(String),
+) -> Request(body) {
+  case identity_token {
+    Some(identity_token) ->
+      req |> request.set_header("Authorization", "Bearer " <> identity_token)
+    None -> req
+  }
 }

@@ -35,7 +35,8 @@ gcloud run deploy ${SERVICE_NAME} \
                   RECIPE_SCRAPER_URL=https://toki-scraper-876817290985.europe-west9.run.app" \
   --set-secrets="DB_PASSWORD=DB_PASSWORD:latest,\
                  JWT_SECRET_KEY=JWT_SECRET_KEY:latest,\
-                 REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest"
+                 REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest,\
+                 SERVICE_ACCOUNT_IDENTITY_TOKEN:latest"
 
 # Verify deployment
 echo "Verifying deployment..."
