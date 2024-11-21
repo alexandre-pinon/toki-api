@@ -63,7 +63,7 @@ fn start_server() -> Result(Nil, InitError) {
       pool: pool,
       token_config: env.token_config,
       recipe_scraper_url: env.recipe_scraper_url,
-      identity_token: env.identity_token,
+      google_metadata_url: env.google_metadata_url,
     )
   let handler = router.handle_request(_, ctx)
 

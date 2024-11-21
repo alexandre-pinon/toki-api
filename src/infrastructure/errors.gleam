@@ -9,9 +9,9 @@ pub type DbError {
   ExecutionFailed(pgo.QueryError)
 }
 
-pub type RequestError {
+pub type HttpError {
   InvalidUrl(url: String)
-  HttpError(reason: Dynamic)
+  RequestFailed(reason: Dynamic)
   BodyDecodingFailed(json.DecodeError)
   WebsiteNotSupported(url: String)
 }

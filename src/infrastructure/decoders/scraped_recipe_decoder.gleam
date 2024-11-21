@@ -109,7 +109,6 @@ fn from_optional_duration_string_to_minutes(
 ) -> Option(Int) {
   maybe_duration
   |> option.map(duration.parse(_))
-  |> option.map(option.from_result)
-  |> option.flatten
+  |> option.then(option.from_result)
   |> option.map(duration.blur_to(_, duration.Minute))
 }

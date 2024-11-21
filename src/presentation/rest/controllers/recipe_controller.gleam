@@ -1,11 +1,13 @@
 import application/context.{type Context, AuthContext}
+import application/use_cases/import_recipe_use_case.{
+  ImportRecipeUseCasePort, ScrapingFailed,
+}
 import application/use_cases/upsert_recipe_use_case.{UpsertRecipeUseCasePort}
 import gleam/json
 import gleam/option.{None, Some}
 import gleam/string
 import infrastructure/errors.{WebsiteNotSupported}
 import infrastructure/repositories/recipe_repository
-import infrastructure/repositories/scraped_recipe_repository
 import presentation/rest/decoders
 import presentation/rest/encoders
 import presentation/rest/middlewares
@@ -131,17 +133,16 @@ pub fn import_from_url(req: Request, ctx: Context) -> Response {
   case decoders.decode_import_recipe_request(json) {
     Ok(decoded) -> {
       case
-        scraped_recipe_repository.scrape_recipe(
-          decoded.url,
-          ctx.recipe_scraper_url,
-          ctx.identity_token,
+        import_recipe_use_case.execute(
+          ImportRecipeUseCasePort(url: decoded.url),
+          ctx,
         )
       {
         Ok(scraped_recipe) ->
           encoders.encode_scraped_recipe(scraped_recipe)
           |> json.to_string_builder
           |> wisp.json_response(200)
-        Error(WebsiteNotSupported(url)) -> {
+        Error(ScrapingFailed(WebsiteNotSupported(url))) -> {
           wisp.log_debug("Website not supported: " <> url)
           wisp.unprocessable_entity()
         }

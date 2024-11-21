@@ -9,7 +9,7 @@ import gleam/result
 import gleam/uri
 import infrastructure/decoders/scraped_recipe_decoder
 import infrastructure/errors.{
-  type RequestError, BodyDecodingFailed, HttpError, InvalidUrl,
+  type HttpError, BodyDecodingFailed, InvalidUrl, RequestFailed,
   WebsiteNotSupported,
 }
 
@@ -17,7 +17,7 @@ pub fn scrape_recipe(
   url: String,
   on recipe_scraper_url: String,
   with identity_token: Option(String),
-) -> Result(ScrapedRecipe, RequestError) {
+) -> Result(ScrapedRecipe, HttpError) {
   use req <- result.try(
     uri.parse(recipe_scraper_url)
     |> result.map(request.from_uri)
@@ -36,7 +36,7 @@ pub fn scrape_recipe(
       |> json.to_string,
     )
 
-  use res <- result.try(httpc.send(req) |> result.map_error(HttpError))
+  use res <- result.try(httpc.send(req) |> result.map_error(RequestFailed))
 
   use <- bool.guard(res.status == 422, Error(WebsiteNotSupported(url)))
 

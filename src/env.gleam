@@ -9,7 +9,7 @@ pub type Env {
     db_config: DbConfig,
     token_config: TokenConfig,
     recipe_scraper_url: String,
-    identity_token: Option(String),
+    google_metadata_url: Option(String),
   )
 }
 
@@ -48,8 +48,8 @@ pub fn load() -> Result(Env, String) {
   use db_config <- result.try(load_db_config())
   use token_config <- result.try(load_token_config())
   use recipe_scraper_url <- env.get_then("RECIPE_SCRAPER_URL")
-  let identity_token =
-    env.get_string("SERVICE_ACCOUNT_IDENTITY_TOKEN") |> option.from_result
+  let google_metadata_url =
+    env.get_string("GOOGLE_METADATA_URL") |> option.from_result
 
   Ok(Env(
     gleam_env,
@@ -57,7 +57,7 @@ pub fn load() -> Result(Env, String) {
     db_config,
     token_config,
     recipe_scraper_url,
-    identity_token,
+    google_metadata_url,
   ))
 }
 

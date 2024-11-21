@@ -10,7 +10,7 @@ pub type Context {
     pool: pgo.Connection,
     token_config: env.TokenConfig,
     recipe_scraper_url: String,
-    identity_token: Option(String),
+    google_metadata_url: Option(String),
   )
 }
 
