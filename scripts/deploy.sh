@@ -36,7 +36,7 @@ gcloud run deploy ${SERVICE_NAME} \
                   GOOGLE_METADATA_URL=http://metadata/computeMetadata/v1/instance/service-accounts/default/identity" \
   --set-secrets="DB_PASSWORD=DB_PASSWORD:latest,\
                  JWT_SECRET_KEY=JWT_SECRET_KEY:latest,\
-                 REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest,\
+                 REFRESH_TOKEN_PEPPER=REFRESH_TOKEN_PEPPER:latest"\
 
 # Verify deployment
 echo "Verifying deployment..."
