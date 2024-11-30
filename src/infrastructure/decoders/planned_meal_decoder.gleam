@@ -1,5 +1,7 @@
 import birl.{Day}
-import domain/entities/planned_meal.{type PlannedMeal}
+import domain/entities/planned_meal.{
+  type PlannedMeal, type PlannedMealWithRecipe,
+}
 import domain/value_objects/db_date.{type DbDate}
 import domain/value_objects/meal_type
 import gleam/dynamic.{type Decoder}
@@ -21,6 +23,19 @@ pub type PlannedMealRow {
   )
 }
 
+pub type PlannedMealWithRecipeRow {
+  PlannedMealWithRecipeRow(
+    id: BitArray,
+    user_id: BitArray,
+    recipe_id: Option(BitArray),
+    meal_date: DbDate,
+    meal_type: String,
+    servings: Int,
+    recipe_title: String,
+    recipe_image_url: Option(String),
+  )
+}
+
 pub fn new() -> Decoder(PlannedMealRow) {
   dynamic.decode6(
     PlannedMealRow,
@@ -30,6 +45,20 @@ pub fn new() -> Decoder(PlannedMealRow) {
     dynamic.field("meal_date", pgo.decode_date),
     dynamic.field("meal_type", dynamic.string),
     dynamic.field("servings", dynamic.int),
+  )
+}
+
+pub fn decode_with_recipe() -> Decoder(PlannedMealWithRecipeRow) {
+  dynamic.decode8(
+    PlannedMealWithRecipeRow,
+    dynamic.field("id", dynamic.bit_array),
+    dynamic.field("user_id", dynamic.bit_array),
+    dynamic.field("recipe_id", dynamic.optional(dynamic.bit_array)),
+    dynamic.field("meal_date", pgo.decode_date),
+    dynamic.field("meal_type", dynamic.string),
+    dynamic.field("servings", dynamic.int),
+    dynamic.field("title", dynamic.string),
+    dynamic.field("image_url", dynamic.optional(dynamic.string)),
   )
 }
 
@@ -69,5 +98,25 @@ pub fn from_db_to_domain(
     meal_date,
     meal_type,
     servings,
+  ))
+}
+
+pub fn from_db_to_domain_with_recipe(
+  row: PlannedMealWithRecipeRow,
+) -> Result(PlannedMealWithRecipe, DbError) {
+  use recipe <- result.try(
+    from_db_to_domain(PlannedMealRow(
+      row.id,
+      row.user_id,
+      row.recipe_id,
+      row.meal_date,
+      row.meal_type,
+      row.servings,
+    )),
+  )
+
+  Ok(planned_meal.PlannedMealWithRecipe(
+    recipe,
+    planned_meal.MealRecipe(row.recipe_title, row.recipe_image_url),
   ))
 }

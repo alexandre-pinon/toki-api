@@ -5,7 +5,9 @@ import domain/entities/aggregated_shopping_list_item.{
 
 import domain/entities/ingredient.{type Ingredient}
 import domain/entities/instruction.{type Instruction}
-import domain/entities/planned_meal.{type PlannedMeal}
+import domain/entities/planned_meal.{
+  type PlannedMeal, type PlannedMealWithRecipe,
+}
 import domain/entities/recipe.{type Recipe}
 import domain/entities/recipe_details.{type RecipeDetails}
 import domain/entities/scraped_recipe.{
@@ -147,6 +149,32 @@ pub fn encode_planned_meal(planned_meal: PlannedMeal) -> Json {
     #("meal_date", json.string(day.to_json_string(planned_meal.meal_date))),
     #("meal_type", json.string(meal_type.to_string(planned_meal.meal_type))),
     #("servings", json.int(planned_meal.servings)),
+  ])
+}
+
+pub fn encode_planned_meal_with_recipe(
+  planned_meal: PlannedMealWithRecipe,
+) -> Json {
+  json.object([
+    #("id", encode_uuid(planned_meal.meal.id)),
+    #("user_id", encode_uuid(planned_meal.meal.user_id)),
+    #("recipe_id", json.nullable(planned_meal.meal.recipe_id, encode_uuid)),
+    #("meal_date", json.string(day.to_json_string(planned_meal.meal.meal_date))),
+    #(
+      "meal_type",
+      json.string(meal_type.to_string(planned_meal.meal.meal_type)),
+    ),
+    #("servings", json.int(planned_meal.meal.servings)),
+    #(
+      "recipe",
+      json.object([
+        #("title", json.string(planned_meal.recipe.title)),
+        #(
+          "image_url",
+          json.nullable(planned_meal.recipe.image_url, json.string),
+        ),
+      ]),
+    ),
   ])
 }
 

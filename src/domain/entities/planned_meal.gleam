@@ -13,3 +13,11 @@ pub type PlannedMeal {
     servings: Int,
   )
 }
+
+pub type MealRecipe {
+  MealRecipe(title: String, image_url: Option(String))
+}
+
+pub type PlannedMealWithRecipe {
+  PlannedMealWithRecipe(meal: PlannedMeal, recipe: MealRecipe)
+}

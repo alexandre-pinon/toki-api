@@ -22,8 +22,11 @@ pub fn list(req: Request, ctx: Context) -> Response {
   case
     planned_meal_repository.find_all(user_id, start_date, end_date, ctx.pool)
   {
-    Ok(planned_meals) ->
-      json.array(planned_meals, encoders.encode_planned_meal)
+    Ok(planned_meals_with_recipe) ->
+      json.array(
+        planned_meals_with_recipe,
+        encoders.encode_planned_meal_with_recipe,
+      )
       |> json.to_string_builder
       |> wisp.json_response(200)
     Error(error) -> {

@@ -1,5 +1,7 @@
 import birl.{type Day}
-import domain/entities/planned_meal.{type PlannedMeal}
+import domain/entities/planned_meal.{
+  type PlannedMeal, type PlannedMealWithRecipe,
+}
 import gleam/dynamic
 import gleam/list
 import gleam/pgo
@@ -14,7 +16,7 @@ pub fn find_all(
   from start_date: Day,
   to end_date: Day,
   on pool: pgo.Connection,
-) -> Result(List(PlannedMeal), DbError) {
+) -> Result(List(PlannedMealWithRecipe), DbError) {
   let query_input = [
     pgo.text(uuid.to_string(user_id)),
     pgo.date(#(start_date.year, start_date.month, start_date.date)),
@@ -22,14 +24,18 @@ pub fn find_all(
   ]
 
   "
-    SELECT id, user_id, recipe_id, meal_date, meal_type, servings
-    FROM planned_meals
-    WHERE user_id = $1
-    AND meal_date BETWEEN $2 AND $3
+    SELECT pm.id, pm.user_id, pm.recipe_id, pm.meal_date, pm.meal_type, pm.servings, r.title, r.image_url
+    FROM planned_meals pm
+    JOIN recipes r ON r.id = pm.recipe_id
+    WHERE pm.user_id = $1
+    AND pm.meal_date BETWEEN $2 AND $3
   "
-  |> db.execute(pool, query_input, planned_meal_decoder.new())
+  |> db.execute(pool, query_input, planned_meal_decoder.decode_with_recipe())
   |> result.map(fn(returned) { returned.rows })
-  |> result.then(list.try_map(_, planned_meal_decoder.from_db_to_domain))
+  |> result.then(list.try_map(
+    _,
+    planned_meal_decoder.from_db_to_domain_with_recipe,
+  ))
 }
 
 pub fn upsert(
