@@ -9,6 +9,18 @@ import infrastructure/errors.{type DbError}
 import infrastructure/postgres/db
 import youid/uuid.{type Uuid}
 
+pub fn find_all_by_recipe_id(
+  recipe_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(List(Ingredient), DbError) {
+  let query_input = [pgo.text(uuid.to_string(recipe_id))]
+
+  "SELECT id, recipe_id, name, quantity, unit FROM ingredients WHERE recipe_id = $1"
+  |> db.execute(pool, query_input, ingredient_decoder.new())
+  |> result.map(fn(returned) { returned.rows })
+  |> result.then(list.try_map(_, ingredient_decoder.from_db_to_domain))
+}
+
 pub fn bulk_create(
   ingredients: List(Ingredient),
   on pool: pgo.Connection,

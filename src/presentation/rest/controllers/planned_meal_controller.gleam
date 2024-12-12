@@ -4,6 +4,7 @@ import application/use_cases/upsert_planned_meal_use_case.{
 }
 import birl.{type Day}
 import gleam/json
+import gleam/option.{None, Some}
 import gleam/string
 import infrastructure/repositories/planned_meal_repository
 import presentation/rest/decoders
@@ -29,6 +30,23 @@ pub fn list(req: Request, ctx: Context) -> Response {
       )
       |> json.to_string_builder
       |> wisp.json_response(200)
+    Error(error) -> {
+      wisp.log_error(string.inspect(error))
+      wisp.internal_server_error()
+    }
+  }
+}
+
+pub fn show(req: Request, ctx: Context, id: String) -> Response {
+  use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
+  use planned_meal_id <- middlewares.require_uuid(id)
+
+  case planned_meal_repository.find_by_id(planned_meal_id, user_id, ctx.pool) {
+    Ok(Some(planned_meal)) ->
+      encoders.encode_planned_meal(planned_meal)
+      |> json.to_string_builder
+      |> wisp.json_response(200)
+    Ok(None) -> wisp.not_found()
     Error(error) -> {
       wisp.log_error(string.inspect(error))
       wisp.internal_server_error()

@@ -40,6 +40,48 @@ pub fn find_by_id(
   id: Uuid,
   for user_id: Uuid,
   on pool: pgo.Connection,
+) -> Result(Option(Recipe), DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  use query_result <- result.try(
+    "
+      SELECT 
+        id,
+        user_id,
+        title,
+        prep_time,
+        cook_time,
+        servings,
+        source_url,
+        image_url,
+        cuisine_type,
+        rating
+      FROM recipes 
+      WHERE r.id = $1
+      AND r.user_id = $2
+    "
+    |> db.execute(pool, query_input, recipe_decoder.new()),
+  )
+
+  let maybe_recipe =
+    list.first(query_result.rows)
+    |> option.from_result
+    |> option.map(recipe_decoder.from_db_to_domain)
+
+  case maybe_recipe {
+    Some(Error(error)) -> Error(error)
+    Some(Ok(recipe)) -> Ok(Some(recipe))
+    None -> Ok(None)
+  }
+}
+
+pub fn find_by_id_with_details(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
 ) -> Result(Option(RecipeDetails), DbError) {
   let query_input = [
     pgo.text(uuid.to_string(id)),

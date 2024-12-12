@@ -98,7 +98,11 @@ fn upsert_shopping_list_items(
   )
 
   use recipe_details <- result.try(
-    recipe_repository.find_by_id(recipe_id, planned_meal.user_id, transaction)
+    recipe_repository.find_by_id_with_details(
+      recipe_id,
+      planned_meal.user_id,
+      transaction,
+    )
     |> result.replace_error("find recipe failed")
     |> result.then(option.to_result(_, "recipe not found")),
   )

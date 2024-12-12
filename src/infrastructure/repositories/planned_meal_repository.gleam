@@ -4,6 +4,7 @@ import domain/entities/planned_meal.{
 }
 import gleam/dynamic
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/pgo
 import gleam/result
 import infrastructure/decoders/planned_meal_decoder
@@ -36,6 +37,38 @@ pub fn find_all(
     _,
     planned_meal_decoder.from_db_to_domain_with_recipe,
   ))
+}
+
+pub fn find_by_id(
+  id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(Option(PlannedMeal), DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  use query_result <- result.try(
+    "
+      SELECT id, user_id, recipe_id, meal_date, meal_type, servings 
+      FROM planned_meals
+      WHERE id = $1
+      AND user_id = $2
+    "
+    |> db.execute(pool, query_input, planned_meal_decoder.new()),
+  )
+
+  let maybe_user =
+    list.first(query_result.rows)
+    |> option.from_result
+    |> option.map(planned_meal_decoder.from_db_to_domain)
+
+  case maybe_user {
+    Some(Error(error)) -> Error(error)
+    Some(Ok(user)) -> Ok(Some(user))
+    None -> Ok(None)
+  }
 }
 
 pub fn upsert(

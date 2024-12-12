@@ -124,6 +124,7 @@ fn handle_planned_meals(req: Request, ctx: Context) -> Response {
 
 fn handle_planned_meal(req: Request, ctx: Context, id: String) -> Response {
   case req.method {
+    Get -> planned_meal_controller.show(req, ctx, id)
     Put -> planned_meal_controller.update(req, ctx, id)
     Delete -> planned_meal_controller.delete(req, ctx, id)
     _ -> wisp.method_not_allowed([Put, Delete])

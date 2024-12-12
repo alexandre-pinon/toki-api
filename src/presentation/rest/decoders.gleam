@@ -104,9 +104,12 @@ pub fn decode_recipe_details_upsert_request(
   json
   |> dynamic.decode3(
     recipe_details_dto.RecipeDetailsUpsertRequest,
-    dynamic.field("recipe", decode_recipe_upsert_request),
-    dynamic.field("ingredients", dynamic.list(decode_ingredient_upsert_request)),
-    dynamic.field(
+    dynamic.optional_field("recipe", decode_recipe_upsert_request),
+    dynamic.optional_field(
+      "ingredients",
+      dynamic.list(decode_ingredient_upsert_request),
+    ),
+    dynamic.optional_field(
       "instructions",
       dynamic.list(decode_instruction_upsert_request),
     ),

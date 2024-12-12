@@ -33,7 +33,7 @@ pub fn show(req: Request, ctx: Context, id: String) -> Response {
   use AuthContext(user_id, _) <- middlewares.require_auth(req, ctx)
   use recipe_id <- middlewares.require_uuid(id)
 
-  case recipe_repository.find_by_id(recipe_id, user_id, ctx.pool) {
+  case recipe_repository.find_by_id_with_details(recipe_id, user_id, ctx.pool) {
     Ok(Some(recipe_details)) ->
       encoders.encode_recipe_details(recipe_details)
       |> json.to_string_builder
