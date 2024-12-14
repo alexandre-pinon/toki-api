@@ -39,6 +39,28 @@ pub fn find_all(
   ))
 }
 
+pub fn find_all_upcoming_by_recipe_id(
+  by recipe_id: Uuid,
+  for user_id: Uuid,
+  on pool: pgo.Connection,
+) -> Result(List(PlannedMeal), DbError) {
+  let query_input = [
+    pgo.text(uuid.to_string(recipe_id)),
+    pgo.text(uuid.to_string(user_id)),
+  ]
+
+  "
+    SELECT id, user_id, recipe_id, meal_date, meal_type, servings
+    FROM planned_meals
+    WHERE recipe_id = $1
+    AND user_id = $2
+    AND meal_date > NOW()
+  "
+  |> db.execute(pool, query_input, planned_meal_decoder.new())
+  |> result.map(fn(returned) { returned.rows })
+  |> result.then(list.try_map(_, planned_meal_decoder.from_db_to_domain))
+}
+
 pub fn find_by_id(
   id: Uuid,
   for user_id: Uuid,

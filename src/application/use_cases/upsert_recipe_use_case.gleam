@@ -1,10 +1,14 @@
-import application/context.{type AuthContext}
+import app_logger
+import application/context.{type AuthContext, type Context}
 import application/dto/ingredient_dto.{type IngredientUpsertInput}
 import application/dto/instruction_dto.{type InstructionUpsertInput}
 import application/dto/recipe_details_dto.{
   type RecipeDetailsUpsertInput, type RecipeDetailsUpsertRequest,
 }
 import application/dto/recipe_dto.{type RecipeUpsertInput}
+import application/use_cases/upsert_meal_shopping_list_item_use_case.{
+  UpsertMealShoppingListItemsUseCasePort,
+}
 import domain/entities/ingredient.{type Ingredient}
 import domain/entities/instruction.{type Instruction}
 import domain/entities/recipe.{type Recipe}
@@ -16,6 +20,7 @@ import gleam/result
 import infrastructure/postgres/db.{type Transactional}
 import infrastructure/repositories/ingredient_repository
 import infrastructure/repositories/instruction_repository
+import infrastructure/repositories/planned_meal_repository
 import infrastructure/repositories/recipe_repository
 import valid.{type NonEmptyList}
 import youid/uuid.{type Uuid}
@@ -43,7 +48,7 @@ pub fn execute(
     upsert_recipe_details(
       recipe_id: port.id,
       with: validated_input,
-      for: auth_ctx.user_id,
+      given: auth_ctx,
     ),
   )
   |> result.map_error(TransactionFailed)
@@ -59,18 +64,19 @@ fn validate_input(
 fn upsert_recipe_details(
   recipe_id id: Uuid,
   with input: RecipeDetailsUpsertInput,
-  for user_id: Uuid,
+  given auth_ctx: AuthContext,
 ) -> Transactional(Result(RecipeDetails, String)) {
   fn(transaction: pgo.Connection) {
     use recipe <- result.try(upsert_recipe(
       id,
       input.recipe,
-      user_id,
+      auth_ctx.user_id,
       transaction,
     ))
     use ingredients <- result.try(upsert_ingredients(
       recipe.id,
       input.ingredients,
+      auth_ctx,
       transaction,
     ))
     use instructions <- result.try(upsert_instructions(
@@ -106,6 +112,7 @@ fn upsert_recipe(
 fn upsert_ingredients(
   recipe_id: Uuid,
   maybe_ingredients: Option(List(IngredientUpsertInput)),
+  auth_ctx: AuthContext,
   transaction: pgo.Connection,
 ) -> Result(List(Ingredient), String) {
   case maybe_ingredients {
@@ -115,11 +122,35 @@ fn upsert_ingredients(
         |> result.replace_error("delete recipe ingredients failed"),
       )
 
-      ingredient_repository.bulk_create(
-        list.map(ingredients, ingredient_dto.to_entity(_, recipe_id)),
-        transaction,
+      use ingredients <- result.try(
+        ingredient_repository.bulk_create(
+          list.map(ingredients, ingredient_dto.to_entity(_, recipe_id)),
+          transaction,
+        )
+        |> result.replace_error("bulk insert ingredient failed"),
       )
-      |> result.replace_error("bulk insert ingredient failed")
+
+      use upcoming_meals <- result.try(
+        planned_meal_repository.find_all_upcoming_by_recipe_id(
+          recipe_id,
+          auth_ctx.user_id,
+          transaction,
+        )
+        |> result.replace_error("find all upcoming meals by recipe_id failed"),
+      )
+
+      use _ <- result.try(
+        list.try_map(upcoming_meals, fn(meal) {
+          upsert_meal_shopping_list_item_use_case.execute(
+            UpsertMealShoppingListItemsUseCasePort(meal, recipe_id),
+            context.Context(..auth_ctx.ctx, pool: transaction),
+          )
+          |> result.map_error(app_logger.log_error)
+          |> result.replace_error("upsert meal shopping list items failed")
+        }),
+      )
+
+      Ok(ingredients)
     }
     None ->
       ingredient_repository.find_all_by_recipe_id(recipe_id, transaction)

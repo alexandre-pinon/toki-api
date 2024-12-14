@@ -1,20 +1,17 @@
+import app_logger
 import application/context.{type AuthContext}
 import application/dto/planned_meal_dto.{
   type PlannedMealUpsertInput, type PlannedMealUpsertRequest,
 }
-import domain/entities/ingredient.{type Ingredient}
+import application/use_cases/upsert_meal_shopping_list_item_use_case.{
+  UpsertMealShoppingListItemsUseCasePort,
+}
 import domain/entities/planned_meal.{type PlannedMeal}
-import domain/entities/shopping_list_item
-import domain/value_objects/unit_type
-import gleam/int
-import gleam/list
 import gleam/option.{None, Some}
 import gleam/pgo
 import gleam/result
 import infrastructure/postgres/db.{type Transactional}
 import infrastructure/repositories/planned_meal_repository
-import infrastructure/repositories/recipe_repository
-import infrastructure/repositories/shopping_list_item_repository
 import valid.{type NonEmptyList}
 import youid/uuid.{type Uuid}
 
@@ -41,7 +38,7 @@ pub fn execute(
     upsert_planned_meal(
       planned_meal_id: port.id,
       with: validated_input,
-      for: auth_ctx.user_id,
+      given: auth_ctx,
     ),
   )
   |> result.map_error(TransactionFailed)
@@ -57,13 +54,13 @@ fn validate_input(
 fn upsert_planned_meal(
   planned_meal_id id: Uuid,
   with input: PlannedMealUpsertInput,
-  for user_id: Uuid,
+  given auth_ctx: AuthContext,
 ) -> Transactional(Result(PlannedMeal, String)) {
   fn(transaction: pgo.Connection) {
     use planned_meal <- result.try(
       planned_meal_repository.upsert(
         planned_meal.PlannedMeal(
-          ..planned_meal_dto.to_entity(input, user_id),
+          ..planned_meal_dto.to_entity(input, auth_ctx.user_id),
           id: id,
         ),
         transaction,
@@ -73,62 +70,13 @@ fn upsert_planned_meal(
 
     case planned_meal.recipe_id {
       Some(recipe_id) ->
-        upsert_shopping_list_items(
-          for: planned_meal,
-          with: recipe_id,
-          on: transaction,
+        upsert_meal_shopping_list_item_use_case.execute(
+          UpsertMealShoppingListItemsUseCasePort(planned_meal, recipe_id),
+          context.Context(..auth_ctx.ctx, pool: transaction),
         )
+        |> result.map_error(app_logger.log_error)
+        |> result.replace_error("upsert meal shopping list items failed")
       None -> Ok(planned_meal)
     }
   }
-}
-
-fn upsert_shopping_list_items(
-  for planned_meal: PlannedMeal,
-  with recipe_id: Uuid,
-  on transaction: pgo.Connection,
-) -> Result(PlannedMeal, String) {
-  use _ <- result.try(
-    shopping_list_item_repository.delete_meal_items(
-      planned_meal.id,
-      planned_meal.user_id,
-      transaction,
-    )
-    |> result.replace_error("delete meal shopping list items failed"),
-  )
-
-  use recipe_details <- result.try(
-    recipe_repository.find_by_id_with_details(
-      recipe_id,
-      planned_meal.user_id,
-      transaction,
-    )
-    |> result.replace_error("find recipe failed")
-    |> result.then(option.to_result(_, "recipe not found")),
-  )
-
-  let quantity_coeff =
-    int.to_float(planned_meal.servings)
-    /. int.to_float(recipe_details.recipe.servings)
-  let to_adjusted_quantity = fn(quantity: Float) { quantity *. quantity_coeff }
-
-  let to_shopping_list_item = fn(ingredient: Ingredient) {
-    shopping_list_item.ShoppingListItem(
-      id: uuid.v4(),
-      user_id: planned_meal.user_id,
-      planned_meal_id: Some(planned_meal.id),
-      name: ingredient.name,
-      unit: ingredient.unit,
-      unit_family: ingredient.unit |> option.map(unit_type.to_family),
-      quantity: ingredient.quantity |> option.map(to_adjusted_quantity),
-      meal_date: Some(planned_meal.meal_date),
-      checked: False,
-    )
-  }
-
-  recipe_details.ingredients
-  |> list.map(to_shopping_list_item)
-  |> shopping_list_item_repository.bulk_create(transaction)
-  |> result.replace_error("bulk insert meal shopping list items failed")
-  |> result.replace(planned_meal)
 }

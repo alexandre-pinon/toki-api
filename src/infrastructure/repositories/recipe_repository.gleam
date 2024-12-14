@@ -60,8 +60,8 @@ pub fn find_by_id(
         cuisine_type,
         rating
       FROM recipes 
-      WHERE r.id = $1
-      AND r.user_id = $2
+      WHERE id = $1
+      AND user_id = $2
     "
     |> db.execute(pool, query_input, recipe_decoder.new()),
   )
