@@ -39,7 +39,7 @@ pub fn to_string(unit_type: UnitType) -> String {
     Can -> "can"
     Package -> "package"
     Slice -> "slice"
-    ToTaste -> "to_taste"
+    ToTaste -> "to taste"
     Unit -> "unit"
   }
 }
@@ -62,7 +62,7 @@ pub fn from_string(unit_type: String) -> UnitType {
     "can" -> Can
     "package" -> Package
     "slice" -> Slice
-    "to_taste" -> ToTaste
+    "to taste" -> ToTaste
     _ -> Unit
   }
 }

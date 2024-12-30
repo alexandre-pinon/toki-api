@@ -1,5 +1,5 @@
 import app_logger
-import application/context.{type AuthContext, type Context}
+import application/context.{type AuthContext}
 import application/dto/ingredient_dto.{type IngredientUpsertInput}
 import application/dto/instruction_dto.{type InstructionUpsertInput}
 import application/dto/recipe_details_dto.{

@@ -2,7 +2,7 @@
 ALTER TABLE
   planned_meals
 ADD
-  CONSTRAINT user_id_meal_type_meal_date UNIQUE(user_id, meal_type, meal_date);
+  CONSTRAINT user_id_meal_type_meal_date UNIQUE(user_id, meal_type, meal_date) DEFERRABLE INITIALLY DEFERRED;
 
 -- migrate:down
 ALTER TABLE

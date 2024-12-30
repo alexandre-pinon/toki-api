@@ -57,6 +57,13 @@ fn upsert_planned_meal(
   given auth_ctx: AuthContext,
 ) -> Transactional(Result(PlannedMeal, String)) {
   fn(transaction: pgo.Connection) {
+    use _ <- result.try(swap_conflicting_meal_if_exists(
+      id,
+      input,
+      auth_ctx.user_id,
+      transaction,
+    ))
+
     use planned_meal <- result.try(
       planned_meal_repository.upsert(
         planned_meal.PlannedMeal(
@@ -78,5 +85,41 @@ fn upsert_planned_meal(
         |> result.replace_error("upsert meal shopping list items failed")
       None -> Ok(planned_meal)
     }
+  }
+}
+
+fn swap_conflicting_meal_if_exists(
+  planned_meal_id id: Uuid,
+  with input: PlannedMealUpsertInput,
+  for user_id: Uuid,
+  using transaction: pgo.Connection,
+) -> Result(Nil, String) {
+  use maybe_existing_meal <- result.try(
+    planned_meal_repository.find_by_id(id, user_id, transaction)
+    |> result.replace_error("find existing meal failed"),
+  )
+  use maybe_conflicting_meal <- result.try(
+    planned_meal_repository.find_by_type_and_date(
+      input.meal_type,
+      input.meal_date,
+      user_id,
+      transaction,
+    )
+    |> result.replace_error("find conflicting meal failed"),
+  )
+
+  case maybe_existing_meal, maybe_conflicting_meal {
+    Some(existing_meal), Some(conflicting_meal) ->
+      planned_meal_repository.upsert(
+        planned_meal.PlannedMeal(
+          ..conflicting_meal,
+          meal_type: existing_meal.meal_type,
+          meal_date: existing_meal.meal_date,
+        ),
+        transaction,
+      )
+      |> result.replace(Nil)
+      |> result.replace_error("swap conflicting meal failed")
+    _, _ -> Ok(Nil)
   }
 }
