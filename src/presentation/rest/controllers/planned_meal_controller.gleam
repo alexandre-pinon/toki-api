@@ -74,6 +74,8 @@ pub fn create(req: Request, ctx: Context) -> Response {
           wisp.log_debug(string.inspect(error))
           wisp.unprocessable_entity()
         }
+        Error(upsert_planned_meal_use_case.MealAlreadyExists(_, _)) ->
+          wisp.response(409)
         Error(error) -> {
           wisp.log_error(string.inspect(error))
           wisp.internal_server_error()
