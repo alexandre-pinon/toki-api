@@ -1,4 +1,5 @@
 import domain/entities/shopping_list_item.{type ShoppingListItem}
+import gleam/bool
 import gleam/dynamic
 import gleam/list
 import gleam/pgo
@@ -40,6 +41,8 @@ pub fn bulk_create(
   shopping_list_items: List(ShoppingListItem),
   on pool: pgo.Connection,
 ) -> Result(List(ShoppingListItem), DbError) {
+  use <- bool.guard(shopping_list_items == [], Ok(shopping_list_items))
+
   let query_input =
     shopping_list_items
     |> list.flat_map(shopping_list_item_decoder.from_domain_to_db)

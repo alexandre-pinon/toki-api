@@ -1,4 +1,5 @@
 import domain/entities/ingredient.{type Ingredient}
+import gleam/bool
 import gleam/dynamic
 import gleam/list
 import gleam/pgo
@@ -25,6 +26,8 @@ pub fn bulk_create(
   ingredients: List(Ingredient),
   on pool: pgo.Connection,
 ) -> Result(List(Ingredient), DbError) {
+  use <- bool.guard(ingredients == [], Ok(ingredients))
+
   let query_input =
     ingredients
     |> list.flat_map(ingredient_decoder.from_domain_to_db)

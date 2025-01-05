@@ -1,4 +1,5 @@
 import domain/entities/instruction.{type Instruction}
+import gleam/bool
 import gleam/dynamic
 import gleam/list
 import gleam/pgo
@@ -25,6 +26,8 @@ pub fn bulk_create(
   instructions: List(Instruction),
   on pool: pgo.Connection,
 ) -> Result(List(Instruction), DbError) {
+  use <- bool.guard(instructions == [], Ok(instructions))
+
   let query_input =
     instructions
     |> list.flat_map(instruction_decoder.from_domain_to_db)
