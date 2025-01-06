@@ -52,17 +52,17 @@ pub fn from_string(unit_type: String) -> UnitType {
     "l" -> L
     "g" -> G
     "kg" -> Kg
-    "tsp" -> Tsp
-    "tbsp" -> Tbsp
-    "cup" -> Cup
-    "piece" -> Piece
-    "pinch" -> Pinch
-    "bunch" -> Bunch
-    "clove" -> Clove
-    "can" -> Can
-    "package" -> Package
-    "slice" -> Slice
-    "to taste" -> ToTaste
+    "cuillère à café" | "tsp" -> Tsp
+    "cuillère à soupe" | "tbsp" -> Tbsp
+    "tasse" | "cup" -> Cup
+    "pièce" | "piece" -> Piece
+    "pincée" | "pinch" -> Pinch
+    "botte" | "bunch" -> Bunch
+    "gousse" | "clove" -> Clove
+    "bocal" | "boîte" | "can" -> Can
+    "sachet" | "paquet" | "package" -> Package
+    "tranche" | "slice" -> Slice
+    "selon le goût" | "to taste" -> ToTaste
     _ -> Unit
   }
 }

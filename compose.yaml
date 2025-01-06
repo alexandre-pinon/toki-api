@@ -16,7 +16,7 @@ services:
       - JWT_EXPIRES_IN=86400
       - REFRESH_TOKEN_PEPPER=toki
       - REFRESH_TOKEN_EXPIRES_IN=2592000
-      - RECIPE_SCRAPER_URL=http://127.0.0.1:8080
+      - RECIPE_SCRAPER_URL=http://host.docker.internal:8080
     ports:
       - "3000:3000"
     depends_on:
