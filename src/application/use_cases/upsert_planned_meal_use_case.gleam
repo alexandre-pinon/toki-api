@@ -135,14 +135,10 @@ fn upsert_planned_meal(
     |> result.replace_error("upsert planned meal failed"),
   )
 
-  case planned_meal.recipe_id {
-    Some(recipe_id) ->
-      upsert_meal_shopping_list_item_use_case.execute(
-        UpsertMealShoppingListItemsUseCasePort(planned_meal, recipe_id),
-        context.Context(..auth_ctx.ctx, pool: transaction),
-      )
-      |> result.map_error(app_logger.log_error)
-      |> result.replace_error("upsert meal shopping list items failed")
-    None -> Ok(planned_meal)
-  }
+  upsert_meal_shopping_list_item_use_case.execute(
+    UpsertMealShoppingListItemsUseCasePort(planned_meal),
+    context.Context(..auth_ctx.ctx, pool: transaction),
+  )
+  |> result.map_error(app_logger.log_error)
+  |> result.replace_error("upsert meal shopping list items failed")
 }

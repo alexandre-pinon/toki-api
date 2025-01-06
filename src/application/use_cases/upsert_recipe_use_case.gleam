@@ -142,7 +142,7 @@ fn upsert_ingredients(
       use _ <- result.try(
         list.try_map(upcoming_meals, fn(meal) {
           upsert_meal_shopping_list_item_use_case.execute(
-            UpsertMealShoppingListItemsUseCasePort(meal, recipe_id),
+            UpsertMealShoppingListItemsUseCasePort(meal),
             context.Context(..auth_ctx.ctx, pool: transaction),
           )
           |> result.map_error(app_logger.log_error)

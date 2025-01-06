@@ -140,6 +140,7 @@ pub fn upsert(
       INSERT INTO planned_meals (id, user_id, recipe_id, meal_date, meal_type, servings, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, DEFAULT, NOW())
       ON CONFLICT (id) DO UPDATE SET
+        recipe_id = EXCLUDED.recipe_id,
         meal_date = EXCLUDED.meal_date,
         meal_type = EXCLUDED.meal_type,
         servings = EXCLUDED.servings,

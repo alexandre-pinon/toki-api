@@ -49,7 +49,7 @@ pub fn to_entity(dto: PlannedMealUpsertInput, for user_id: Uuid) -> PlannedMeal 
   planned_meal.PlannedMeal(
     id: uuid.v4(),
     user_id: user_id,
-    recipe_id: Some(dto.recipe_id),
+    recipe_id: dto.recipe_id,
     meal_date: dto.meal_date,
     meal_type: dto.meal_type,
     servings: dto.servings,

@@ -145,7 +145,7 @@ pub fn encode_planned_meal(planned_meal: PlannedMeal) -> Json {
   json.object([
     #("id", encode_uuid(planned_meal.id)),
     #("user_id", encode_uuid(planned_meal.user_id)),
-    #("recipe_id", json.nullable(planned_meal.recipe_id, encode_uuid)),
+    #("recipe_id", encode_uuid(planned_meal.recipe_id)),
     #("meal_date", json.string(day.to_json_string(planned_meal.meal_date))),
     #("meal_type", json.string(meal_type.to_string(planned_meal.meal_type))),
     #("servings", json.int(planned_meal.servings)),
@@ -158,7 +158,7 @@ pub fn encode_planned_meal_with_recipe(
   json.object([
     #("id", encode_uuid(planned_meal.meal.id)),
     #("user_id", encode_uuid(planned_meal.meal.user_id)),
-    #("recipe_id", json.nullable(planned_meal.meal.recipe_id, encode_uuid)),
+    #("recipe_id", encode_uuid(planned_meal.meal.recipe_id)),
     #("meal_date", json.string(day.to_json_string(planned_meal.meal.meal_date))),
     #(
       "meal_type",

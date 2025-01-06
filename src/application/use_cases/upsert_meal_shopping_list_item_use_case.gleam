@@ -10,13 +10,10 @@ import gleam/result
 import infrastructure/errors.{type DbError}
 import infrastructure/repositories/recipe_repository
 import infrastructure/repositories/shopping_list_item_repository
-import youid/uuid.{type Uuid}
+import youid/uuid
 
 pub type UpsertMealShoppingListItemsUseCasePort {
-  UpsertMealShoppingListItemsUseCasePort(
-    planned_meal: PlannedMeal,
-    recipe_id: Uuid,
-  )
+  UpsertMealShoppingListItemsUseCasePort(planned_meal: PlannedMeal)
 }
 
 type UpsertMealShoppingListItemsUseCaseResult =
@@ -45,7 +42,7 @@ pub fn execute(
 
   use recipe_details <- result.try(
     recipe_repository.find_by_id_with_details(
-      port.recipe_id,
+      port.planned_meal.recipe_id,
       port.planned_meal.user_id,
       ctx.pool,
     )

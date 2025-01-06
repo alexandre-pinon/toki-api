@@ -7,7 +7,7 @@ pub type PlannedMeal {
   PlannedMeal(
     id: Uuid,
     user_id: Uuid,
-    recipe_id: Option(Uuid),
+    recipe_id: Uuid,
     meal_date: Day,
     meal_type: MealType,
     servings: Int,

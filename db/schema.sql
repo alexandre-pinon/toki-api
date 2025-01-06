@@ -295,7 +295,7 @@ CREATE TABLE public.instructions (
 CREATE TABLE public.planned_meals (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
-    recipe_id uuid,
+    recipe_id uuid NOT NULL,
     meal_date date NOT NULL,
     meal_type public.meal_type NOT NULL,
     servings integer NOT NULL,
@@ -477,7 +477,7 @@ ALTER TABLE ONLY public.instructions
 --
 
 ALTER TABLE ONLY public.planned_meals
-    ADD CONSTRAINT planned_meals_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE SET NULL;
+    ADD CONSTRAINT planned_meals_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
 
 
 --
@@ -549,4 +549,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20241103162845'),
     ('20241106183825'),
     ('20241107075043'),
-    ('20241107083217');
+    ('20241107083217'),
+    ('20250105143638');
