@@ -15,7 +15,12 @@ pub fn find_all(
 ) -> Result(List(AggregatedShoppingListItem), DbError) {
   let query_input = [pgo.text(uuid.to_string(user_id))]
 
-  "SELECT * FROM aggregated_shopping_list WHERE user_id = $1"
+  "
+    SELECT * FROM aggregated_shopping_list
+    WHERE user_id = $1
+    ORDER BY meal_date
+    NULLS FIRST
+  "
   |> db.execute(pool, query_input, aggregated_shopping_list_item_decoder.new())
   |> result.map(fn(returned) { returned.rows })
   |> result.then(list.try_map(
