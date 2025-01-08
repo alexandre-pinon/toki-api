@@ -18,7 +18,7 @@ pub fn find_all(
   "
     SELECT * FROM aggregated_shopping_list
     WHERE user_id = $1
-    ORDER BY meal_date
+    ORDER BY checked, meal_date
     NULLS FIRST
   "
   |> db.execute(pool, query_input, aggregated_shopping_list_item_decoder.new())
