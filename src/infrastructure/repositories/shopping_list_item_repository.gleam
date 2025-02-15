@@ -51,7 +51,7 @@ pub fn bulk_create(
     "INSERT INTO shopping_list_items (id, user_id, planned_meal_id, name, unit, unit_family, quantity, meal_date, checked, created_at, updated_at) VALUES"
     |> string.append(db.generate_values_clause(shopping_list_items, 9))
     |> string.append(
-      "RETURNING id, user_id, planned_meal_id, name, unit, unit_family, quantity, meal_date, checked",
+      "RETURNING id, user_id, planned_meal_id, name, unit, unit_family, quantity::float, meal_date, checked",
     )
     |> db.execute(pool, query_input, shopping_list_item_decoder.new()),
   )

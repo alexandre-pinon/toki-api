@@ -2,7 +2,6 @@ import application/dto/common_dto
 import birl.{type Day}
 import domain/entities/planned_meal.{type PlannedMeal}
 import domain/value_objects/meal_type.{type MealType}
-import gleam/option.{Some}
 import gleam/result
 import non_empty_list
 import valid.{type ValidatorResult}
